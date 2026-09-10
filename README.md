@@ -4,11 +4,11 @@ An LLM discovers how to accomplish a task in a legacy back-office UI. That run i
 typed, versioned **capability artifact**. The artifact then replays **deterministically, with no
 model in the decision loop** — which is how an agent would invoke it in production.
 
-Built for the interface.ai take-home. Full design rationale will live in `REPORT.md`.
+Design rationale lives in `REPORT.md`.
 
-> **Status: in progress.** Setup and the target application are in place. The discovery loop,
-> artifact schema, replay engine, safety model, and human-handoff path are still being built.
-> This README is a placeholder and will be replaced with real setup and demo instructions.
+> **Status: in progress.** The toolchain and the target application are in place. The discovery
+> loop, artifact schema, replay engine, safety model, and human-handoff path are still being
+> built. This README is a placeholder and will be replaced with setup and demo instructions.
 
 ## Running what exists today
 
