@@ -1,0 +1,34 @@
+{% extends "_base.html" %}
+{% block body %}
+<h2>Member Search</h2>
+<form method="get">
+  <table class="f">
+    <tr>
+      <td>{{ c.member_label }}</td>
+      <td><input type="text" name="f3" size="16" value="{{ q }}" title="{{ c.member_label }}"></td>
+      <td><input type="submit" class="btn" value="Search"></td>
+    </tr>
+  </table>
+</form>
+
+{% if searched %}
+  {% if results %}
+  <table class="g" style="margin-top:10px">
+    <tr><th>{{ c.member_label }}</th><th>Name</th><th>Accounts</th><th></th></tr>
+    {% for m in results %}
+      {% for a in m.accounts %}
+      <tr>
+        <td>{{ m.member_id }}</td>
+        <td>{{ m.display }}</td>
+        <td>{{ a.kind }} {{ a.masked }}</td>
+        {# Deliberately ambiguous: every row offers the same link text. #}
+        <td><a href="{{ url_for('app.member_shell', mid=m.member_id) }}">View</a></td>
+      </tr>
+      {% endfor %}
+    {% endfor %}
+  </table>
+  {% else %}
+  <p style="margin-top:10px">No records match that number.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

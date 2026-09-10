@@ -1,0 +1,22 @@
+{% extends "_frame.html" %}
+{% block tabs %}
+<div class="tabs">
+  <a class="on">Profile</a>
+  <a href="{{ url_for('app.member_accounts', mid=m.member_id) }}">Accounts</a>
+</div>
+{% endblock %}
+{% block body %}
+<h3 style="margin-top:0">{{ m.full_name }}</h3>
+{# Legacy apps park read-only data in disabled inputs. That also gives these
+   fields an accessible name, which is what the screenshot mask rules key on. #}
+<table class="f">
+  <tr><td>{{ c.member_label }}</td>
+      <td><input type="text" size="14" value="{{ m.member_id }}" readonly title="{{ c.member_label }}"></td></tr>
+  <tr><td>SSN</td>
+      <td><input type="text" size="14" value="{{ m.ssn }}" readonly title="SSN"></td></tr>
+  <tr><td>Card on File</td>
+      <td><input type="text" size="22" value="{{ m.card }}" readonly title="Card Number"></td></tr>
+  <tr><td>Servicing Status</td>
+      <td>{{ "RESTRICTED" if m.restricted else "Standard" }}</td></tr>
+</table>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "_base.html" %}
+{% block body %}
+<h2>Operator Sign-On</h2>
+{% if error %}<div class="err">{{ error }}</div>{% endif %}
+<form method="post">
+  <table class="f">
+    <tr><td>Operator ID</td><td><input type="text" name="f1" size="24" title="Operator ID"></td></tr>
+    <tr><td>Password</td><td><input type="password" name="f2" size="24" title="Password"></td></tr>
+    <tr><td></td><td><input type="submit" class="btn" value="Sign On"></td></tr>
+  </table>
+</form>
+{% endblock %}

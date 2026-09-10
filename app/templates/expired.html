@@ -1,0 +1,5 @@
+{% extends "_base.html" %}
+{% block body %}
+<div class="err">Your session has expired. Please sign on again.</div>
+<p><a href="{{ url_for('app.login') }}">Return to sign-on</a></p>
+{% endblock %}

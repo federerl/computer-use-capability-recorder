@@ -1,0 +1,22 @@
+{% extends "_frame.html" %}
+{% block tabs %}
+<div class="tabs"><a class="on">Security Verification</a></div>
+{% endblock %}
+{% block body %}
+{# Nothing in the artifact declares this state. Replay must escalate rather
+   than guess its way through it. #}
+<div role="dialog" aria-label="Security Verification Required">
+  <h3 style="margin-top:0">Security Verification Required</h3>
+  <p>Additional verification is required before servicing this account.</p>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  <form method="post" action="{{ url_for('app.stoppay_challenge') }}">
+    <input type="hidden" name="m" value="{{ m.member_id }}">
+    <input type="hidden" name="a" value="{{ acct.masked }}">
+    <table class="f">
+      <tr><td>In what town was the member born?</td>
+          <td><input type="text" name="f9" size="18"></td></tr>
+      <tr><td></td><td><input type="submit" class="btn" value="Verify"></td></tr>
+    </table>
+  </form>
+</div>
+{% endblock %}
