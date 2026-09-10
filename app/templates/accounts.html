@@ -1,0 +1,22 @@
+{% extends "_frame.html" %}
+{% block tabs %}
+<div class="tabs">
+  <a href="{{ url_for('app.member_detail', mid=m.member_id) }}">Profile</a>
+  <a class="on">Accounts</a>
+</div>
+{% endblock %}
+{% block body %}
+<h3 style="margin-top:0">Accounts - {{ m.full_name }}</h3>
+<table class="g">
+  <tr><th>Type</th><th>Account</th><th>Balance</th><th>Servicing</th></tr>
+  {% for a in m.accounts %}
+  <tr>
+    <td>{{ a.kind }}</td>
+    <td>{{ a.masked }}</td>
+    <td>{{ "%.2f"|format(a.balance) }}</td>
+    {# Same link text on every row again - row scope is the only disambiguator. #}
+    <td><a href="{{ url_for('app.stoppay_new') }}?m={{ m.member_id }}&a={{ a.masked }}">Stop Pay</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

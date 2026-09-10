@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ c.brand }} - pane</title>
+  <style>
+    body { font-family: Verdana, Geneva, sans-serif; font-size: 12px; margin: 0;
+           background: #fff; color: #14181d; }
+    .tabs { background: #dde3ea; border-bottom: 1px solid #b9c0c9; padding: 5px 8px; }
+    .tabs a { margin-right: 12px; color: #14509b; }
+    .tabs .on { font-weight: bold; color: #14181d; text-decoration: none; }
+    .pane { padding: 10px; }
+    table.g { border-collapse: collapse; }
+    table.g td, table.g th { border: 1px solid #b9c0c9; padding: 4px 7px; }
+    table.g th { background: #dde3ea; text-align: left; }
+    table.f td { padding: 3px 6px; vertical-align: middle; }
+    input[type=text], select { border: 1px solid #8a94a1; padding: 2px; }
+    .btn { background: #dde3ea; border: 1px solid #8a94a1; padding: 3px 10px; cursor: pointer; }
+    .err { background: #fde8e8; border: 1px solid #c0392b; padding: 6px 9px; margin: 6px 0; }
+    .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+             background: rgba(0,0,0,.45); }
+    .modal .box { background: #fff; border: 2px solid {{ c.accent }}; width: 340px;
+                  margin: 60px auto; padding: 14px; }
+    a { color: #14509b; }
+  </style>
+</head>
+<body>
+  {% block tabs %}{% endblock %}
+  <div class="pane">{% block body %}{% endblock %}</div>
+  {% if notice %}{% include "_notice.html" %}{% endif %}
+</body>
+</html>
