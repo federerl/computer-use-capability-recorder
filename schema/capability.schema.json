@@ -1,0 +1,1295 @@
+{
+  "$defs": {
+    "AppProfile": {
+      "additionalProperties": false,
+      "description": "What the capability was recorded against.\n\n`product` is the vendor application; `tenant` is one institution's instance\nof it. Keeping them apart is what makes a capability shareable: institutions\nrunning the same product should reuse one recording with per-tenant\noverrides, not each own a private copy of the same flow.",
+      "properties": {
+        "product": {
+          "title": "Product",
+          "type": "string"
+        },
+        "product_version": {
+          "default": "",
+          "title": "Product Version",
+          "type": "string"
+        },
+        "tenant": {
+          "title": "Tenant",
+          "type": "string"
+        },
+        "entry": {
+          "title": "Entry",
+          "type": "string"
+        }
+      },
+      "required": [
+        "product",
+        "tenant",
+        "entry"
+      ],
+      "title": "AppProfile",
+      "type": "object"
+    },
+    "Checkpoint": {
+      "additionalProperties": false,
+      "description": "Proof the step did what it was supposed to. Without one, replay is\nasserting that a click was dispatched, not that anything happened.",
+      "properties": {
+        "after_step": {
+          "title": "After Step",
+          "type": "string"
+        },
+        "assertions": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "count_at_least": "#/$defs/CountAtLeast",
+                "matches": "#/$defs/ValueMatches",
+                "role_visible": "#/$defs/RoleVisible",
+                "text_absent": "#/$defs/TextAbsent",
+                "text_present": "#/$defs/TextPresent",
+                "url_matches": "#/$defs/UrlMatches"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/TextPresent"
+              },
+              {
+                "$ref": "#/$defs/TextAbsent"
+              },
+              {
+                "$ref": "#/$defs/RoleVisible"
+              },
+              {
+                "$ref": "#/$defs/UrlMatches"
+              },
+              {
+                "$ref": "#/$defs/ValueMatches"
+              },
+              {
+                "$ref": "#/$defs/CountAtLeast"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Assertions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "after_step",
+        "assertions"
+      ],
+      "title": "Checkpoint",
+      "type": "object"
+    },
+    "Condition": {
+      "additionalProperties": false,
+      "description": "A runtime state the flow knows how to name.\n\n`klass` is the whole point of the artifact carrying conditions at all. It is\nauthored when the flow is recorded and reviewed by a person, so a caller\nreceiving \"no such member\" gets an outcome rather than an exception, and an\nunexpected dialog does not get silently clicked through.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "class": {
+          "enum": [
+            "business_outcome",
+            "recoverable",
+            "hard"
+          ],
+          "title": "Class",
+          "type": "string"
+        },
+        "detect": {
+          "discriminator": {
+            "mapping": {
+              "count_at_least": "#/$defs/CountAtLeast",
+              "matches": "#/$defs/ValueMatches",
+              "role_visible": "#/$defs/RoleVisible",
+              "text_absent": "#/$defs/TextAbsent",
+              "text_present": "#/$defs/TextPresent",
+              "url_matches": "#/$defs/UrlMatches"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/TextPresent"
+            },
+            {
+              "$ref": "#/$defs/TextAbsent"
+            },
+            {
+              "$ref": "#/$defs/RoleVisible"
+            },
+            {
+              "$ref": "#/$defs/UrlMatches"
+            },
+            {
+              "$ref": "#/$defs/ValueMatches"
+            },
+            {
+              "$ref": "#/$defs/CountAtLeast"
+            }
+          ],
+          "title": "Detect"
+        },
+        "applies_to": {
+          "anyOf": [
+            {
+              "const": "any",
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "default": "any",
+          "title": "Applies To"
+        },
+        "message": {
+          "default": "",
+          "title": "Message",
+          "type": "string"
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Outcome"
+        },
+        "recover": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Recovery"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "max_attempts": {
+          "default": 1,
+          "title": "Max Attempts",
+          "type": "integer"
+        },
+        "terminal": {
+          "default": false,
+          "title": "Terminal",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "class",
+        "detect"
+      ],
+      "title": "Condition",
+      "type": "object"
+    },
+    "CountAtLeast": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "count_at_least",
+          "default": "count_at_least",
+          "title": "Kind",
+          "type": "string"
+        },
+        "role": {
+          "title": "Role",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "minimum": {
+          "default": 1,
+          "title": "Minimum",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/FrameScope"
+        }
+      },
+      "required": [
+        "role"
+      ],
+      "title": "CountAtLeast",
+      "type": "object"
+    },
+    "CssStrategy": {
+      "description": "Recorded from the live DOM. Ranked last and labelled, because it encodes\ndocument structure that can change without any visible change to the UI.",
+      "properties": {
+        "by": {
+          "const": "css",
+          "default": "css",
+          "title": "By",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        },
+        "note": {
+          "default": "recorded selector; brittle",
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "CssStrategy",
+      "type": "object"
+    },
+    "Disambiguation": {
+      "description": "`expect_unique` is the safety property. A strategy that matches more than\none node has not identified anything, so it is discarded in favour of the\nnext strategy rather than resolved by position. `nth` exists only for targets\nthat are genuinely positional, and must be set deliberately.",
+      "properties": {
+        "expect_unique": {
+          "default": true,
+          "title": "Expect Unique",
+          "type": "boolean"
+        },
+        "nth": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nth"
+        }
+      },
+      "title": "Disambiguation",
+      "type": "object"
+    },
+    "DiscoveredBy": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "steps_taken": {
+          "default": 0,
+          "title": "Steps Taken",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "model",
+        "run_id"
+      ],
+      "title": "DiscoveredBy",
+      "type": "object"
+    },
+    "Extraction": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/Target"
+        },
+        "take": {
+          "default": "text",
+          "enum": [
+            "text",
+            "value",
+            "attribute"
+          ],
+          "title": "Take",
+          "type": "string"
+        },
+        "attribute": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attribute"
+        },
+        "transform": {
+          "default": "trim",
+          "enum": [
+            "trim",
+            "number",
+            "currency",
+            "first_match"
+          ],
+          "title": "Transform",
+          "type": "string"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        }
+      },
+      "required": [
+        "name",
+        "target"
+      ],
+      "title": "Extraction",
+      "type": "object"
+    },
+    "FrameScope": {
+      "properties": {
+        "frame": {
+          "default": "main",
+          "title": "Frame",
+          "type": "string"
+        }
+      },
+      "title": "FrameScope",
+      "type": "object"
+    },
+    "OutputSpec": {
+      "additionalProperties": false,
+      "description": "One value the caller gets back.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "default": "string",
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "boolean"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "sensitivity": {
+          "default": "none",
+          "enum": [
+            "none",
+            "pii_id",
+            "account",
+            "secret"
+          ],
+          "title": "Sensitivity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "OutputSpec",
+      "type": "object"
+    },
+    "ParamSpec": {
+      "additionalProperties": false,
+      "description": "One input the caller supplies per invocation.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "default": "string",
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "boolean"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "enum": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Enum"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "sensitivity": {
+          "default": "none",
+          "enum": [
+            "none",
+            "pii_id",
+            "account",
+            "secret"
+          ],
+          "title": "Sensitivity",
+          "type": "string"
+        },
+        "example": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Example"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ParamSpec",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "discovered_by": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DiscoveredBy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "trace_ref": {
+          "default": "",
+          "title": "Trace Ref",
+          "type": "string"
+        },
+        "recorded_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recorded At"
+        },
+        "human_edits": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Human Edits",
+          "type": "array"
+        }
+      },
+      "title": "Provenance",
+      "type": "object"
+    },
+    "Recovery": {
+      "additionalProperties": false,
+      "description": "What to do about a recoverable condition.\n\nSteps are inline rather than a reference to another capability: dismissing an\ninterstitial and signing back in are both short, and indirection would buy\nnothing here.\n\n`restart_flow` exists because some recoveries land somewhere else entirely -\nsigning back in after a timeout returns to the entry screen, not to the form\nthe run was halfway through, so retrying the current step would act on the\nwrong page. Restarting is refused once a step marked irreversible has\nexecuted; that run escalates instead of quietly doing the same irreversible\nthing twice.",
+      "properties": {
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/Step"
+          },
+          "title": "Steps",
+          "type": "array"
+        },
+        "then": {
+          "default": "retry_current_step",
+          "enum": [
+            "retry_current_step",
+            "continue",
+            "restart_flow"
+          ],
+          "title": "Then",
+          "type": "string"
+        }
+      },
+      "title": "Recovery",
+      "type": "object"
+    },
+    "RoleNameStrategy": {
+      "description": "Role plus accessible name. First choice: it is what a screen reader would\nuse, and it is stable across restyling.",
+      "properties": {
+        "by": {
+          "const": "role_name",
+          "default": "role_name",
+          "title": "By",
+          "type": "string"
+        },
+        "role": {
+          "title": "Role",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "name"
+      ],
+      "title": "RoleNameStrategy",
+      "type": "object"
+    },
+    "RoleVisible": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "role_visible",
+          "default": "role_visible",
+          "title": "Kind",
+          "type": "string"
+        },
+        "role": {
+          "title": "Role",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "scope": {
+          "$ref": "#/$defs/FrameScope"
+        }
+      },
+      "required": [
+        "role"
+      ],
+      "title": "RoleVisible",
+      "type": "object"
+    },
+    "ScopedRoleStrategy": {
+      "description": "A control identified by the container it sits in.\n\nCovers the two cases role+name cannot: a control with no accessible name at\nall, and several identically named controls that differ only by which row\nthey sit in.\n\nThe container is identified one of two ways. `scope_anchor` names a distinct\ncell the container must contain - a label like \"Check Number\", or the account\na row is about. `scope_name` matches the container's own accessible name,\nwhich is the concatenation of everything inside it.\n\nAnchoring is preferred because a container's accessible name includes the\nvalues of the controls within it. A row named \"Reason -- select --\" becomes\n\"Reason Lost check\" the moment the field is used, so a strategy written\nagainst the whole name stops matching the row it was recorded from.",
+      "properties": {
+        "by": {
+          "const": "scoped_role",
+          "default": "scoped_role",
+          "title": "By",
+          "type": "string"
+        },
+        "scope_role": {
+          "title": "Scope Role",
+          "type": "string"
+        },
+        "scope_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scope Name"
+        },
+        "scope_anchor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scope Anchor"
+        },
+        "role": {
+          "title": "Role",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "required": [
+        "scope_role",
+        "role"
+      ],
+      "title": "ScopedRoleStrategy",
+      "type": "object"
+    },
+    "SecretRef": {
+      "additionalProperties": false,
+      "description": "A credential the flow needs, named but never carried.\n\nOnly `env:` is supported. Adding a scheme is a deliberate act, which is the\npoint: there is no way to write a secret value into an artifact.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "ref": {
+          "title": "Ref",
+          "type": "string"
+        },
+        "used_in_steps": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Used In Steps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "ref"
+      ],
+      "title": "SecretRef",
+      "type": "object"
+    },
+    "Step": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "action": {
+          "enum": [
+            "click",
+            "fill",
+            "select",
+            "press",
+            "navigate"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Target"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ValueSource"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Key"
+        },
+        "wait": {
+          "$ref": "#/$defs/WaitSpec"
+        },
+        "risk": {
+          "default": "safe",
+          "enum": [
+            "safe",
+            "irreversible"
+          ],
+          "title": "Risk",
+          "type": "string"
+        },
+        "policy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StepPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "note": {
+          "default": "",
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "action"
+      ],
+      "title": "Step",
+      "type": "object"
+    },
+    "StepPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "requires": {
+          "anyOf": [
+            {
+              "const": "confirmation",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requires"
+        }
+      },
+      "title": "StepPolicy",
+      "type": "object"
+    },
+    "SurfaceSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "default": "web",
+          "enum": [
+            "web",
+            "desktop"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "engine": {
+          "default": "chromium",
+          "title": "Engine",
+          "type": "string"
+        }
+      },
+      "title": "SurfaceSpec",
+      "type": "object"
+    },
+    "Target": {
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/FrameScope"
+        },
+        "primary": {
+          "discriminator": {
+            "mapping": {
+              "css": "#/$defs/CssStrategy",
+              "role_name": "#/$defs/RoleNameStrategy",
+              "scoped_role": "#/$defs/ScopedRoleStrategy",
+              "text_exact": "#/$defs/TextExactStrategy"
+            },
+            "propertyName": "by"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/RoleNameStrategy"
+            },
+            {
+              "$ref": "#/$defs/ScopedRoleStrategy"
+            },
+            {
+              "$ref": "#/$defs/TextExactStrategy"
+            },
+            {
+              "$ref": "#/$defs/CssStrategy"
+            }
+          ],
+          "title": "Primary"
+        },
+        "fallbacks": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "css": "#/$defs/CssStrategy",
+                "role_name": "#/$defs/RoleNameStrategy",
+                "scoped_role": "#/$defs/ScopedRoleStrategy",
+                "text_exact": "#/$defs/TextExactStrategy"
+              },
+              "propertyName": "by"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/RoleNameStrategy"
+              },
+              {
+                "$ref": "#/$defs/ScopedRoleStrategy"
+              },
+              {
+                "$ref": "#/$defs/TextExactStrategy"
+              },
+              {
+                "$ref": "#/$defs/CssStrategy"
+              }
+            ]
+          },
+          "title": "Fallbacks",
+          "type": "array"
+        },
+        "disambiguation": {
+          "$ref": "#/$defs/Disambiguation"
+        }
+      },
+      "required": [
+        "primary"
+      ],
+      "title": "Target",
+      "type": "object"
+    },
+    "TextAbsent": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "text_absent",
+          "default": "text_absent",
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/FrameScope"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "TextAbsent",
+      "type": "object"
+    },
+    "TextExactStrategy": {
+      "properties": {
+        "by": {
+          "const": "text_exact",
+          "default": "text_exact",
+          "title": "By",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "TextExactStrategy",
+      "type": "object"
+    },
+    "TextPresent": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "text_present",
+          "default": "text_present",
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/FrameScope"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "TextPresent",
+      "type": "object"
+    },
+    "UrlMatches": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "url_matches",
+          "default": "url_matches",
+          "title": "Kind",
+          "type": "string"
+        },
+        "pattern": {
+          "title": "Pattern",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pattern"
+      ],
+      "title": "UrlMatches",
+      "type": "object"
+    },
+    "ValueMatches": {
+      "additionalProperties": false,
+      "description": "Assert an extracted value has the shape it is supposed to have. This is\nwhat stops a checkpoint passing on a page that merely contains the right\nwords.",
+      "properties": {
+        "kind": {
+          "const": "matches",
+          "default": "matches",
+          "title": "Kind",
+          "type": "string"
+        },
+        "extract": {
+          "title": "Extract",
+          "type": "string"
+        },
+        "pattern": {
+          "title": "Pattern",
+          "type": "string"
+        }
+      },
+      "required": [
+        "extract",
+        "pattern"
+      ],
+      "title": "ValueMatches",
+      "type": "object"
+    },
+    "ValueSource": {
+      "additionalProperties": false,
+      "description": "Where a step's value comes from. Exactly one of these is set.",
+      "properties": {
+        "from_input": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "From Input"
+        },
+        "from_secret": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "From Secret"
+        },
+        "literal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Literal"
+        }
+      },
+      "title": "ValueSource",
+      "type": "object"
+    },
+    "WaitSpec": {
+      "additionalProperties": false,
+      "description": "What \"done\" means for a step. Declared per step, because a generic\nquiescence heuristic cannot know that submitting a form should end on a\nconfirmation rather than merely stop changing.",
+      "properties": {
+        "until": {
+          "default": "settled",
+          "enum": [
+            "settled",
+            "text",
+            "url",
+            "role"
+          ],
+          "title": "Until",
+          "type": "string"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "scope": {
+          "$ref": "#/$defs/FrameScope"
+        },
+        "timeout_ms": {
+          "default": 8000,
+          "title": "Timeout Ms",
+          "type": "integer"
+        }
+      },
+      "title": "WaitSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "version": {
+      "default": "1.0.0",
+      "title": "Version",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "description": {
+      "default": "",
+      "title": "Description",
+      "type": "string"
+    },
+    "approval_state": {
+      "default": "draft",
+      "enum": [
+        "draft",
+        "approved"
+      ],
+      "title": "Approval State",
+      "type": "string"
+    },
+    "surface": {
+      "$ref": "#/$defs/SurfaceSpec"
+    },
+    "app_profile": {
+      "$ref": "#/$defs/AppProfile"
+    },
+    "inputs": {
+      "items": {
+        "$ref": "#/$defs/ParamSpec"
+      },
+      "title": "Inputs",
+      "type": "array"
+    },
+    "outputs": {
+      "items": {
+        "$ref": "#/$defs/OutputSpec"
+      },
+      "title": "Outputs",
+      "type": "array"
+    },
+    "secrets": {
+      "items": {
+        "$ref": "#/$defs/SecretRef"
+      },
+      "title": "Secrets",
+      "type": "array"
+    },
+    "steps": {
+      "items": {
+        "$ref": "#/$defs/Step"
+      },
+      "minItems": 1,
+      "title": "Steps",
+      "type": "array"
+    },
+    "checkpoints": {
+      "items": {
+        "$ref": "#/$defs/Checkpoint"
+      },
+      "title": "Checkpoints",
+      "type": "array"
+    },
+    "extract": {
+      "items": {
+        "$ref": "#/$defs/Extraction"
+      },
+      "title": "Extract",
+      "type": "array"
+    },
+    "conditions": {
+      "items": {
+        "$ref": "#/$defs/Condition"
+      },
+      "title": "Conditions",
+      "type": "array"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "app_profile",
+    "steps"
+  ],
+  "title": "Capability",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "A typed, versioned description of a UI flow that can be replayed deterministically without a model in the decision loop."
+}
