@@ -367,6 +367,16 @@ class Capability(Strict):
 
     provenance: Provenance = Field(default_factory=Provenance)
 
+    review: list[str] = Field(default_factory=list)
+    """What a reviewer must settle before this capability is approved.
+
+    A discovery run sees one path through the interface. It cannot have observed
+    the states it did not hit, and it cannot know whether a value it saw on
+    screen was incidental or is genuinely fixed for every caller. Rather than
+    guess, the compiler records what it could not decide, and the capability
+    stays a draft until a person resolves it.
+    """
+
     # ------------------------------------------------------------ consistency
 
     @model_validator(mode="after")

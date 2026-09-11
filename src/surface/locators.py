@@ -168,6 +168,60 @@ def strategies_for(node: Node, obs: Observation, css: str | None = None) -> Targ
     )
 
 
+def row_cell_index(obs: Observation, node: Node) -> int | None:
+    """Position of `node` among the cells of its container, in document order."""
+    found = _container_of(obs, node)
+    if not found:
+        return None
+    start, container = found
+
+    position = 0
+    for i in range(start + 1, len(obs.nodes)):
+        candidate = obs.nodes[i]
+        if candidate.depth <= container.depth or candidate.frame != node.frame:
+            break
+        if candidate.role != "cell":
+            continue
+        if candidate is node:
+            return position
+        position += 1
+    return None
+
+
+def extraction_target_for(node: Node, obs: Observation,
+                          css: str | None = None) -> Target:
+    """Target a value by where it sits, never by what it says.
+
+    An extracted value is the one thing on the page guaranteed to differ between
+    runs. The cell holding a confirmation number is *named* by that number, so
+    the ordinary ranking would record `cell "SP-89802443"` as the primary
+    strategy and bake one run's answer into the artifact.
+
+    Positional resolution is correct here rather than a compromise: the value is
+    identified as the nth cell of the row carrying a stable label, which is
+    exactly how a person reads a label/value table.
+    """
+    anchor = _anchor_for(obs, node)
+    scope = node.nearest_scope()
+    index = row_cell_index(obs, node)
+
+    if not (anchor and scope and index is not None):
+        raise ValueError(
+            f"{node.role} {node.name!r} is not in a labelled container, so it "
+            f"cannot be extracted without recording its current value"
+        )
+
+    fallbacks: list[Strategy] = [CssStrategy(value=css)] if css else []
+    return Target(
+        scope=FrameScope(frame=node.frame),
+        primary=ScopedRoleStrategy(
+            scope_role=scope[0], scope_anchor=anchor, role=node.role,
+        ),
+        fallbacks=fallbacks,
+        disambiguation=Disambiguation(expect_unique=False, nth=index),
+    )
+
+
 def build_locator(frame, strategy: Strategy):
     """Map one strategy onto a framework locator."""
     if strategy.by == "role_name":

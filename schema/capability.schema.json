@@ -1280,6 +1280,13 @@
     },
     "provenance": {
       "$ref": "#/$defs/Provenance"
+    },
+    "review": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Review",
+      "type": "array"
     }
   },
   "required": [
