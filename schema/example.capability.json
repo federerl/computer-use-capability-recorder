@@ -1,0 +1,346 @@
+{
+  "schema_version": "1.0.0",
+  "id": "meridian.stop_payment.place",
+  "version": "1.0.0",
+  "title": "Place a stop payment on a check",
+  "description": "Signs on, looks up a member, opens one of their accounts and places a stop payment on a named check, returning the confirmation details.",
+  "approval_state": "draft",
+  "surface": { "kind": "web", "engine": "chromium" },
+
+  "app_profile": {
+    "product": "meridian-backoffice",
+    "product_version": "3.2",
+    "tenant": "meridian-cu",
+    "entry": "${BASE_URL}/login"
+  },
+
+  "inputs": [
+    {
+      "name": "member_id",
+      "type": "string",
+      "pattern": "^[0-9]{6}$",
+      "description": "Member number as printed on the servicing record.",
+      "sensitivity": "pii_id",
+      "example": "100482"
+    },
+    {
+      "name": "account_kind",
+      "type": "string",
+      "enum": ["Checking", "Savings"],
+      "description": "Which of the member's accounts the check was drawn on.",
+      "example": "Checking"
+    },
+    {
+      "name": "check_number",
+      "type": "string",
+      "pattern": "^[0-9]{1,6}$",
+      "example": "1043"
+    },
+    {
+      "name": "reason",
+      "type": "string",
+      "enum": ["lost_check", "stolen_check", "dispute", "other"],
+      "example": "lost_check"
+    }
+  ],
+
+  "outputs": [
+    {
+      "name": "confirmation_number",
+      "type": "string",
+      "pattern": "^SP-[0-9]{8}$",
+      "description": "Servicing reference for the placed stop payment."
+    },
+    { "name": "stop_payment_fee", "type": "number" },
+    { "name": "account_masked", "type": "string", "sensitivity": "account" },
+    { "name": "placed_at", "type": "string" }
+  ],
+
+  "secrets": [
+    { "name": "operator_user", "ref": "env:BACKOFFICE_USER", "used_in_steps": ["s2"] },
+    { "name": "operator_password", "ref": "env:BACKOFFICE_PASSWORD", "used_in_steps": ["s3"] }
+  ],
+
+  "steps": [
+    {
+      "id": "s1",
+      "action": "navigate",
+      "url": "${BASE_URL}/login",
+      "wait": { "until": "role", "role": "button", "name": "Sign On", "timeout_ms": 8000 }
+    },
+    {
+      "id": "s2",
+      "action": "fill",
+      "value": { "from_secret": "operator_user" },
+      "target": {
+        "scope": { "frame": "main" },
+        "primary": { "by": "role_name", "role": "textbox", "name": "Operator ID" },
+        "fallbacks": [
+          { "by": "scoped_role", "scope_role": "row", "scope_anchor": "Operator ID", "role": "textbox" }
+        ]
+      }
+    },
+    {
+      "id": "s3",
+      "action": "fill",
+      "value": { "from_secret": "operator_password" },
+      "target": {
+        "scope": { "frame": "main" },
+        "primary": { "by": "role_name", "role": "textbox", "name": "Password" },
+        "fallbacks": [
+          { "by": "scoped_role", "scope_role": "row", "scope_anchor": "Password", "role": "textbox" }
+        ]
+      }
+    },
+    {
+      "id": "s4",
+      "action": "click",
+      "target": {
+        "scope": { "frame": "main" },
+        "primary": { "by": "role_name", "role": "button", "name": "Sign On" }
+      },
+      "wait": { "until": "role", "role": "button", "name": "Search", "timeout_ms": 8000 }
+    },
+    {
+      "id": "s5",
+      "action": "fill",
+      "value": { "from_input": "member_id" },
+      "target": {
+        "scope": { "frame": "main" },
+        "primary": { "by": "role_name", "role": "textbox", "name": "Member Number" },
+        "fallbacks": [
+          { "by": "scoped_role", "scope_role": "row", "scope_anchor": "Member Number", "role": "textbox" }
+        ]
+      }
+    },
+    {
+      "id": "s6",
+      "action": "click",
+      "target": {
+        "scope": { "frame": "main" },
+        "primary": { "by": "role_name", "role": "button", "name": "Search" },
+        "fallbacks": [{ "by": "text_exact", "text": "Search" }]
+      },
+      "wait": { "until": "settled", "timeout_ms": 12000 },
+      "note": "A slow result set is a declared recoverable, not a failure."
+    },
+    {
+      "id": "s7",
+      "action": "click",
+      "target": {
+        "scope": { "frame": "main" },
+        "primary": { "by": "role_name", "role": "link", "name": "View" },
+        "disambiguation": { "expect_unique": false, "nth": 0 }
+      },
+      "wait": { "until": "role", "role": "link", "name": "Accounts", "scope": { "frame": "detail" }, "timeout_ms": 8000 },
+      "note": "Results list one row per account, and every row for a member opens the same servicing record. Positional resolution is deliberate here and is the only step that uses it."
+    },
+    {
+      "id": "s8",
+      "action": "click",
+      "target": {
+        "scope": { "frame": "detail" },
+        "primary": { "by": "role_name", "role": "link", "name": "Accounts" }
+      },
+      "wait": { "until": "text", "text": "Accounts -", "scope": { "frame": "detail" }, "timeout_ms": 8000 }
+    },
+    {
+      "id": "s9",
+      "action": "click",
+      "target": {
+        "scope": { "frame": "detail" },
+        "primary": {
+          "by": "scoped_role",
+          "scope_role": "row",
+          "scope_anchor": "${account_kind}",
+          "role": "link",
+          "name": "Stop Pay"
+        }
+      },
+      "wait": { "until": "text", "text": "Place Stop Payment", "scope": { "frame": "detail" }, "timeout_ms": 8000 },
+      "note": "Which account row to service is chosen by an input. This is targeting, not typing, so it is a placeholder in the target rather than a value binding."
+    },
+    {
+      "id": "s10",
+      "action": "fill",
+      "value": { "from_input": "check_number" },
+      "target": {
+        "scope": { "frame": "detail" },
+        "primary": { "by": "scoped_role", "scope_role": "row", "scope_anchor": "Check Number", "role": "textbox" },
+        "fallbacks": [
+          { "by": "scoped_role", "scope_role": "row", "scope_name": "Check Number", "role": "textbox" }
+        ]
+      },
+      "note": "The control carries no accessible name of its own; the label cell is what makes it addressable."
+    },
+    {
+      "id": "s11",
+      "action": "select",
+      "value": { "from_input": "reason" },
+      "target": {
+        "scope": { "frame": "detail" },
+        "primary": { "by": "scoped_role", "scope_role": "row", "scope_anchor": "Reason", "role": "combobox" }
+      },
+      "note": "Anchored on the label cell rather than the row name, which changes to include the selected value once this step runs."
+    },
+    {
+      "id": "s12",
+      "action": "click",
+      "risk": "irreversible",
+      "policy": { "requires": "confirmation" },
+      "target": {
+        "scope": { "frame": "detail" },
+        "primary": { "by": "role_name", "role": "button", "name": "Submit Stop Payment" },
+        "fallbacks": [
+          { "by": "scoped_role", "scope_role": "row", "scope_anchor": "Submit Stop Payment", "role": "button" }
+        ]
+      },
+      "wait": { "until": "text", "text": "Stop Payment Confirmed", "scope": { "frame": "detail" }, "timeout_ms": 15000 },
+      "note": "Places a fee-bearing hold that cannot be undone from this screen."
+    }
+  ],
+
+  "extract": [
+    {
+      "name": "confirmation_number",
+      "target": {
+        "scope": { "frame": "detail" },
+        "primary": { "by": "scoped_role", "scope_role": "row", "scope_anchor": "Confirmation Number", "role": "cell" },
+        "disambiguation": { "expect_unique": false, "nth": 1 }
+      }
+    },
+    {
+      "name": "stop_payment_fee",
+      "transform": "number",
+      "target": {
+        "scope": { "frame": "detail" },
+        "primary": { "by": "scoped_role", "scope_role": "row", "scope_anchor": "Stop Payment Fee", "role": "cell" },
+        "disambiguation": { "expect_unique": false, "nth": 1 }
+      }
+    },
+    {
+      "name": "account_masked",
+      "target": {
+        "scope": { "frame": "detail" },
+        "primary": { "by": "scoped_role", "scope_role": "row", "scope_anchor": "Account", "role": "cell" },
+        "disambiguation": { "expect_unique": false, "nth": 1 }
+      }
+    },
+    {
+      "name": "placed_at",
+      "target": {
+        "scope": { "frame": "detail" },
+        "primary": { "by": "scoped_role", "scope_role": "row", "scope_anchor": "Placed At", "role": "cell" },
+        "disambiguation": { "expect_unique": false, "nth": 1 }
+      }
+    }
+  ],
+
+  "checkpoints": [
+    {
+      "after_step": "s12",
+      "assertions": [
+        { "kind": "text_present", "value": "Stop Payment Confirmed", "scope": { "frame": "detail" } },
+        { "kind": "matches", "extract": "confirmation_number", "pattern": "^SP-[0-9]{8}$" }
+      ]
+    }
+  ],
+
+  "conditions": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "class": "business_outcome",
+      "applies_to": ["s6"],
+      "detect": { "kind": "text_present", "value": "No records match", "scope": { "frame": "main" } },
+      "outcome": "member_not_found",
+      "terminal": true,
+      "message": "No member exists with that number."
+    },
+    {
+      "code": "ACCOUNT_RESTRICTED",
+      "class": "business_outcome",
+      "applies_to": ["s8", "s9"],
+      "detect": { "kind": "text_present", "value": "cannot service restricted accounts", "scope": { "frame": "detail" } },
+      "outcome": "account_restricted",
+      "terminal": true,
+      "message": "The signed-on operator may not service this member."
+    },
+    {
+      "code": "CHECK_ALREADY_CLEARED",
+      "class": "business_outcome",
+      "applies_to": ["s12"],
+      "detect": { "kind": "text_present", "value": "has already cleared", "scope": { "frame": "detail" } },
+      "outcome": "check_already_cleared",
+      "terminal": true,
+      "message": "The check has cleared and can no longer be stopped."
+    },
+    {
+      "code": "SYSTEM_NOTICE",
+      "class": "recoverable",
+      "applies_to": "any",
+      "detect": { "kind": "role_visible", "role": "dialog", "name": "System Notice", "scope": { "frame": "any" } },
+      "max_attempts": 2,
+      "message": "A maintenance interstitial appeared over the working pane.",
+      "recover": {
+        "then": "retry_current_step",
+        "steps": [
+          {
+            "id": "r1",
+            "action": "click",
+            "target": {
+              "scope": { "frame": "any" },
+              "primary": { "by": "role_name", "role": "button", "name": "Continue" }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "code": "SESSION_EXPIRED",
+      "class": "recoverable",
+      "applies_to": "any",
+      "detect": { "kind": "text_present", "value": "Your session has expired", "scope": { "frame": "any" } },
+      "max_attempts": 1,
+      "message": "The servicing session timed out mid-flow.",
+      "recover": {
+        "then": "restart_flow",
+        "steps": [
+          { "id": "r2", "action": "navigate", "url": "${BASE_URL}/login" },
+          {
+            "id": "r3",
+            "action": "fill",
+            "value": { "from_secret": "operator_user" },
+            "target": {
+              "scope": { "frame": "main" },
+              "primary": { "by": "role_name", "role": "textbox", "name": "Operator ID" }
+            }
+          },
+          {
+            "id": "r4",
+            "action": "fill",
+            "value": { "from_secret": "operator_password" },
+            "target": {
+              "scope": { "frame": "main" },
+              "primary": { "by": "role_name", "role": "textbox", "name": "Password" }
+            }
+          },
+          {
+            "id": "r5",
+            "action": "click",
+            "target": {
+              "scope": { "frame": "main" },
+              "primary": { "by": "role_name", "role": "button", "name": "Sign On" }
+            }
+          }
+        ]
+      }
+    }
+  ],
+
+  "provenance": {
+    "trace_ref": "",
+    "human_edits": [
+      "Reference artifact, authored by hand to exercise the schema. Capabilities used for evidence are produced by a discovery run."
+    ]
+  }
+}

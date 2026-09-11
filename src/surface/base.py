@@ -30,6 +30,12 @@ SCOPING_ROLES = ("row", "dialog", "form", "listitem", "article", "region", "grou
 
 TOP_FRAME = "main"
 
+# Some states are not tied to a pane. A session-expiry banner or an unexpected
+# interstitial appears wherever the application decided to put it, so a target
+# for one has to be able to say "wherever this is" without becoming a wildcard
+# that matches several things at once.
+ANY_FRAME = "any"
+
 
 # --------------------------------------------------------------------- targeting
 

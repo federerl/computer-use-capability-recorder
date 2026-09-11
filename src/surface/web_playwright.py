@@ -22,7 +22,7 @@ from playwright.sync_api import Page, TimeoutError as PWTimeout
 from . import locators as loc
 from . import snapshot as snap
 from .base import (
-    TOP_FRAME, Action, ActionBlocked, ActResult, ConfirmationRequired, Gate,
+    ANY_FRAME, TOP_FRAME, Action, ActionBlocked, ActResult, ConfirmationRequired, Gate,
     AllowAll, Node, Observation, Resolution, SurfaceError, Target, TargetNotFound,
 )
 
@@ -122,7 +122,36 @@ class WebSurface:
     # --------------------------------------------------------------- targeting
 
     def resolve(self, target: Target) -> Resolution:
+        if target.scope.frame == ANY_FRAME:
+            return self._resolve_across_frames(target)
         return loc.resolve(self.frame(target.scope.frame), target)
+
+    def _resolve_across_frames(self, target: Target) -> Resolution:
+        """Resolve a target that does not name a pane.
+
+        Uniqueness still has to hold, and now it has to hold across the whole
+        page: a match in two frames is as ambiguous as a match twice in one, so
+        it fails rather than picking a frame.
+        """
+        hits: list[tuple[str, Resolution]] = []
+        attempts = []
+
+        for name in self.frames():
+            try:
+                hits.append((name, loc.resolve(self.frame(name), target)))
+            except TargetNotFound as exc:
+                attempts.extend(exc.attempts)
+
+        if len(hits) == 1:
+            resolution = hits[0][1]
+            resolution.attempts = attempts + resolution.attempts
+            return resolution
+        if not hits:
+            raise TargetNotFound(target, attempts)
+        raise TargetNotFound(
+            target,
+            attempts + [a for _, r in hits for a in r.attempts],
+        )
 
     def target_for(self, node: Node, obs: Observation) -> Target:
         """Ranked strategies for a snapshot node, with a CSS path recorded from
