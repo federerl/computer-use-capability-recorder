@@ -1,0 +1,10 @@
+frame:main
+  text 'Meridian CU - Back Office <<secret:operator_user>>'
+  heading 'Member Search'
+  table
+    row 'Member Number 100482 Search'
+      cell 'Member Number'  [e1]
+      cell '100482'  [e2]
+        textbox 'Member Number' = '100482'  [e3]
+      cell 'Search'  [e4]
+        button 'Search'  [e5]

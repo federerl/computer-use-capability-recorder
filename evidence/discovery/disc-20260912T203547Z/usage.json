@@ -1,0 +1,7 @@
+{
+  "model_calls": 10,
+  "input_tokens": 24785,
+  "output_tokens": 1409,
+  "cache_read_tokens": 23967,
+  "cache_write_tokens": 2663
+}

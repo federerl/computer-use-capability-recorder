@@ -1,0 +1,26 @@
+frame:main
+  text 'Meridian CU - Back Office <<secret:operator_user>>'
+  heading 'Member 100482'
+  paragraph
+    link 'Back to search'  [e1]
+  iframe
+frame:detail
+  text 'Profile'
+  link 'Accounts'  [e2]
+  heading 'BARNES, ROSALIND'
+  table
+    row 'Member Number 100482'
+      cell 'Member Number'  [e3]
+      cell '100482'  [e4]
+        textbox 'Member Number' = '100482'  [e5]
+    row 'SSN <<redacted:ssn>>'
+      cell 'SSN'  [e6]
+      cell '<<redacted:ssn>>'  [e7]
+        textbox 'SSN' = '<<redacted:ssn>>'  [e8]
+    row 'Card on File <<redacted:card>>'
+      cell 'Card on File'  [e9]
+      cell '<<redacted:card>>'  [e10]
+        textbox 'Card Number' = '<<redacted:card>>'  [e11]
+    row 'Servicing Status Standard'
+      cell 'Servicing Status'  [e12]
+      cell 'Standard'  [e13]

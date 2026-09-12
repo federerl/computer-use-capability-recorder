@@ -1,0 +1,31 @@
+frame:main
+  text 'Meridian CU - Back Office <<secret:operator_user>>'
+  heading 'Member 100482'
+  paragraph
+    link 'Back to search'  [e1]
+  iframe
+frame:detail
+  link 'Profile'  [e2]
+  link 'Accounts'  [e3]
+  heading 'Stop Payment Confirmed'
+  table
+    row 'Confirmation Number SP-12819530'
+      cell 'Confirmation Number'  [e4]
+      cell 'SP-12819530'  [e5]
+    row 'Account ****4821'
+      cell 'Account'  [e6]
+      cell '****4821'  [e7]
+    row 'Check Number 1043'
+      cell 'Check Number'  [e8]
+      cell '1043'  [e9]
+    row 'Reason lost_check'
+      cell 'Reason'  [e10]
+      cell 'lost_check'  [e11]
+    row 'Stop Payment Fee 32.00'
+      cell 'Stop Payment Fee'  [e12]
+      cell '32.00'  [e13]
+    row 'Placed At 2026-09-12T20:36:51+00:00'
+      cell 'Placed At'  [e14]
+      cell '2026-09-12T20:36:51+00:00'  [e15]
+  paragraph
+    link 'Return to accounts'  [e16]

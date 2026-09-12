@@ -1,0 +1,55 @@
+{
+  "capability_id": "meridian.stop_payment.place",
+  "goal": "Sign in to the back-office application. Look up the member with member number 100482, open their Checking account, and place a stop payment on check number 1043 with the reason 'Lost check'. Continue until you reach the confirmation screen. Report the confirmation number, the stop payment fee that was charged, and the masked account number.",
+
+  "app_profile": {
+    "product": "meridian-backoffice",
+    "product_version": "3.2",
+    "tenant": "meridian-cu",
+    "entry": "${BASE_URL}/login"
+  },
+
+  "inputs": [
+    {
+      "name": "member_id",
+      "type": "string",
+      "pattern": "^[0-9]{6}$",
+      "description": "Member number as printed on the servicing record.",
+      "sensitivity": "pii_id",
+      "example": "100482"
+    },
+    {
+      "name": "account_kind",
+      "type": "string",
+      "enum": ["Checking", "Savings"],
+      "description": "Which of the member's accounts the check was drawn on.",
+      "example": "Checking"
+    },
+    {
+      "name": "check_number",
+      "type": "string",
+      "pattern": "^[0-9]{1,6}$",
+      "description": "Number of the check to stop.",
+      "example": "1043"
+    },
+    {
+      "name": "reason",
+      "type": "string",
+      "enum": ["lost_check", "stolen_check", "dispute", "other"],
+      "description": "Why the stop payment is being placed.",
+      "example": "lost_check"
+    }
+  ],
+
+  "secrets": [
+    { "name": "operator_user", "ref": "env:BACKOFFICE_USER" },
+    { "name": "operator_password", "ref": "env:BACKOFFICE_PASSWORD" }
+  ],
+
+  "values": {
+    "member_id": "100482",
+    "account_kind": "Checking",
+    "check_number": "1043",
+    "reason": "lost_check"
+  }
+}

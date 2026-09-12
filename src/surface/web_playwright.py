@@ -153,6 +153,15 @@ class WebSurface:
             attempts + [a for _, r in hits for a in r.attempts],
         )
 
+    def extraction_target_for(self, node: Node, obs: Observation) -> Target:
+        """Ranked target for a value to be read back, positioned rather than named."""
+        provisional = loc.extraction_target_for(node, obs)
+        try:
+            css = loc.css_path_for(self.resolve(provisional).locator)
+        except (TargetNotFound, PWError):
+            css = None
+        return loc.extraction_target_for(node, obs, css=css)
+
     def target_for(self, node: Node, obs: Observation) -> Target:
         """Ranked strategies for a snapshot node, with a CSS path recorded from
         the live DOM as the last-resort fallback."""

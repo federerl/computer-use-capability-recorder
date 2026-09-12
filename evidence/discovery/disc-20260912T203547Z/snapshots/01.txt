@@ -1,0 +1,16 @@
+frame:main
+  text 'Meridian CU - Back Office'
+  heading 'Operator Sign-On'
+  table
+    row 'Operator ID'
+      cell 'Operator ID'  [e1]
+      cell  [e2]
+        textbox 'Operator ID'  [e3]
+    row 'Password'
+      cell 'Password'  [e4]
+      cell  [e5]
+        textbox 'Password'  [e6]
+    row 'Sign On'
+      cell  [e7]
+      cell 'Sign On'  [e8]
+        button 'Sign On'  [e9]
