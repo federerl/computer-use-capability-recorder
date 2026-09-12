@@ -1,0 +1,28 @@
+frame:main
+  text 'Meridian CU - Back Office <<secret:operator_user>>'
+  heading 'Member Search'
+  table
+    row 'Member Number 100482 Search'
+      cell 'Member Number'  [e1]
+      cell '100482'  [e2]
+        textbox 'Member Number' = '100482'  [e3]
+      cell 'Search'  [e4]
+        button 'Search'  [e5]
+  table
+    row 'Member Number Name Accounts'
+      columnheader 'Member Number'
+      columnheader 'Name'
+      columnheader 'Accounts'
+      columnheader
+    row '100482 BARNES, R. Checking ****4821 View'
+      cell '100482'  [e6]
+      cell 'BARNES, R.'  [e7]
+      cell 'Checking ****4821'  [e8]
+      cell 'View'  [e9]
+        link 'View'  [e10]
+    row '100482 BARNES, R. Savings ****9930 View'
+      cell '100482'  [e11]
+      cell 'BARNES, R.'  [e12]
+      cell 'Savings ****9930'  [e13]
+      cell 'View'  [e14]
+        link 'View'  [e15]

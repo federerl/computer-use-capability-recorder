@@ -1,0 +1,28 @@
+frame:main
+  text 'Meridian CU - Back Office <<secret:operator_user>>'
+  heading 'Member 100482'
+  paragraph
+    link 'Back to search'  [e1]
+  iframe
+frame:detail
+  link 'Profile'  [e2]
+  text 'Accounts'
+  heading 'Accounts - BARNES, ROSALIND'
+  table
+    row 'Type Account Balance Servicing'
+      columnheader 'Type'
+      columnheader 'Account'
+      columnheader 'Balance'
+      columnheader 'Servicing'
+    row 'Checking ****4821 4182.55 Stop Pay'
+      cell 'Checking'  [e3]
+      cell '****4821'  [e4]
+      cell '4182.55'  [e5]
+      cell 'Stop Pay'  [e6]
+        link 'Stop Pay'  [e7]
+    row 'Savings ****9930 15903.12 Stop Pay'
+      cell 'Savings'  [e8]
+      cell '****9930'  [e9]
+      cell '15903.12'  [e10]
+      cell 'Stop Pay'  [e11]
+        link 'Stop Pay'  [e12]
