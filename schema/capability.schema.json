@@ -135,6 +135,11 @@
           ],
           "title": "Detect"
         },
+        "verified": {
+          "default": false,
+          "title": "Verified",
+          "type": "boolean"
+        },
         "applies_to": {
           "anyOf": [
             {

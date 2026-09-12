@@ -64,6 +64,16 @@ def compile_capability(req: CompileRequest) -> Capability:
             "No non-success outcomes were identified. Add the ones this flow can "
             "legitimately return before approving it."
         )
+    for condition in conditions:
+        detected = getattr(condition.detect, "value", "") or getattr(
+            condition.detect, "name", "")
+        review.append(
+            f"Condition {condition.code} was anticipated, not observed: this run "
+            f"never reached that state, so {detected!r} is a guess at wording "
+            f"nobody has read. Confirm it against the real screen - a detector "
+            f"that never fires leaves the state it was meant to catch falling "
+            f"through as unknown."
+        )
     review.append(
         "Recoverable conditions cannot be discovered from a successful run. Add "
         "handling for interstitials, timeouts and slow loads this application can "
@@ -121,11 +131,44 @@ def _canonicalise(step, values: dict[str, str], base_url: str,
         url = "${BASE_URL}" + url[len(base_url):]
 
     target = _generalise_target(step.target, values, review, step.id) if step.target else None
+    wait = _check_wait(step.wait, values, review, step.id)
 
     return Step(
         id=step.id, action=step.action, target=target, url=url, value=step.value,
-        key=step.key, wait=step.wait, note=step.note,
+        key=step.key, wait=wait, note=step.note,
     )
+
+
+def _check_wait(wait, values: dict[str, str], review: list[str], step_id: str):
+    """Waits are derived from what an action changed, so they can pick up text
+    belonging to the record the run happened to use.
+
+    Two different problems live here. A wait carrying an input value can be
+    found by comparison. A wait carrying something that was never an input - a
+    member's name in a heading - cannot be, because there is nothing to compare
+    it against. Both end up in review: the first named precisely, the second by
+    listing the derived waits for a person to read.
+    """
+    text = wait.text or wait.name
+    if not text:
+        return wait
+
+    for name, supplied in values.items():
+        if supplied and supplied in text:
+            review.append(
+                f"Step {step_id}: waits for {text!r}, which contains the value "
+                f"supplied for {name!r}. It will wait forever on any other "
+                f"record. Replace it with text that is the same for every "
+                f"invocation."
+            )
+            return wait
+
+    review.append(
+        f"Step {step_id}: waits for {text!r}, learned from what this run "
+        f"changed. Confirm that text appears for every invocation and is not "
+        f"particular to this record."
+    )
+    return wait
 
 
 def _generalise_target(target: Target, values: dict[str, str],
@@ -243,5 +286,6 @@ def _conditions(finalize: dict) -> list[Condition]:
             "outcome": spec["outcome"],
             "message": spec.get("message", ""),
             "terminal": True,
+            "verified": False,
         }))
     return conditions
