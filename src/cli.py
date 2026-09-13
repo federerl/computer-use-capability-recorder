@@ -17,8 +17,21 @@ from src.discovery.agent import DiscoveryConfig, DiscoveryRun
 from src.discovery.brief import DiscoveryBrief
 from src.evidence.log import RunLog, new_run_id
 from src.replay.engine import InputError, ReplayEngine
-from src.safety.redaction import Redactor
+from src.safety.policy import Policy, PolicyGate
+from src.safety.redaction import DEFAULT_PATTERNS, Redactor
 from src.surface.web_playwright import WebSurface
+
+
+def guarded(page, policy: Policy) -> WebSurface:
+    """A surface that cannot act outside the policy, and cannot write an
+    unmasked screenshot."""
+    return WebSurface(page, gate=PolicyGate(policy),
+                      mask_rules=policy.redaction.screenshot_mask)
+
+
+def redactor_for(policy: Policy) -> Redactor:
+    patterns = tuple((p, "policy") for p in policy.redaction.patterns)
+    return Redactor(patterns or DEFAULT_PATTERNS)
 
 EXIT_OK = 0
 EXIT_FAILED = 1
@@ -51,8 +64,9 @@ def discover(args: argparse.Namespace) -> int:
     base_url = os.environ.get("BASE_URL", args.base_url)
     entry = brief.app_profile.entry.replace("${BASE_URL}", base_url)
 
+    policy = Policy.load(args.policy)
     run_id = new_run_id("disc")
-    log = RunLog(args.evidence_root, run_id, Redactor())
+    log = RunLog(args.evidence_root, run_id, redactor_for(policy))
 
     from anthropic import Anthropic
     from playwright.sync_api import sync_playwright
@@ -65,12 +79,13 @@ def discover(args: argparse.Namespace) -> int:
     print(f"  entry   {entry}")
     print(f"  model   {config.model}  (max {config.max_steps} steps, "
           f"{config.max_seconds}s)")
+    print(f"  policy  {policy.name}")
     print(f"  evidence {log.dir}")
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=args.headless)
         page = browser.new_page()
-        surface = WebSurface(page)
+        surface = guarded(page, policy)
         try:
             result = DiscoveryRun(
                 surface, client, log, goal=brief.goal, entry=entry,
@@ -128,20 +143,21 @@ def replay(args: argparse.Namespace) -> int:
         print("Pass --allow-draft to run it anyway.", file=sys.stderr)
         return EXIT_USAGE
 
+    policy = Policy.load(args.policy)
     run_id = new_run_id("replay")
-    log = RunLog(args.evidence_root, run_id, Redactor())
+    log = RunLog(args.evidence_root, run_id, redactor_for(policy))
 
     from playwright.sync_api import sync_playwright
 
     print(f"run {run_id}: {capability.id}@{capability.version} "
-          f"({capability.approval_state})")
+          f"({capability.approval_state})  policy {policy.name}")
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=args.headless)
         page = browser.new_page()
         try:
             engine = ReplayEngine(
-                WebSurface(page), capability, log,
+                guarded(page, policy), capability, log,
                 runtime={"BASE_URL": base_url},
                 auto_confirm=args.unattended,
             )
@@ -192,6 +208,7 @@ def build_parser() -> argparse.ArgumentParser:
     d.add_argument("--max-seconds", type=int, default=360)
     d.add_argument("--evidence-root", default="evidence/discovery")
     d.add_argument("--out", default=None)
+    d.add_argument("--policy", default="policy/discovery.yaml")
     d.add_argument("--headless", action="store_true",
                    help="run without a visible browser (default is visible)")
     d.set_defaults(func=discover)
@@ -201,6 +218,7 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--inputs", default="{}", help="JSON object of input values")
     r.add_argument("--base-url", default="http://127.0.0.1:5000")
     r.add_argument("--evidence-root", default="evidence/replay")
+    r.add_argument("--policy", default="policy/attended.yaml")
     r.add_argument("--unattended", action="store_true",
                    help="perform steps the capability marks as needing "
                         "confirmation, without one")
