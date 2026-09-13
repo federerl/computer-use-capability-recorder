@@ -1,0 +1,48 @@
+name: discovery
+description: >
+  For an exploratory run. Consequential actions are permitted, because a flow
+  that ends before its final step is not worth recording, but they are flagged
+  so the recording carries the classification. The alternative is trusting a
+  model to notice that a control it just clicked was irreversible, which it has
+  no way to know.
+
+allowlist:
+  origins:
+    - http://127.0.0.1:5000
+    - http://127.0.0.1:5099
+    - http://127.0.0.1:5097
+  paths:
+    - "^/$"
+    - "^/login$"
+    - "^/logout$"
+    - "^/members(/.*)?$"
+    - "^/stoppay(/.*)?$"
+  deny_paths:
+    # The fault controller is the lever that makes injected states appear.
+    # Reaching it would let a run make its own obstacles disappear.
+    - "^/_control(/.*)?$"
+    - "^/admin(/.*)?$"
+
+action_types:
+  allow: [click, fill, select, press, navigate]
+  deny: [upload, download, accept_unknown_dialog]
+
+risk_rules:
+  - actions: [click]
+    name_matches: "(?i)\\b(submit|confirm|approve|post|authorise|authorize)\\b"
+    risk: irreversible
+    on_risky: flag
+    why: commits a servicing action that cannot be undone from the same screen
+  - actions: [click]
+    name_matches: "(?i)\\b(transfer|wire|disburse|close account|delete|remove|void)\\b"
+    risk: irreversible
+    on_risky: flag
+    why: moves money or destroys a record
+
+redaction:
+  patterns:
+    - "\\b\\d{3}-\\d{2}-\\d{4}\\b"
+    - "\\b(?:\\d[ -]?){13,19}\\b"
+  screenshot_mask:
+    - role: textbox
+      name_matches: "(?i)(ssn|social security|tax id|card|password|pin)"

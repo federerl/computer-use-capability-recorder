@@ -300,6 +300,33 @@ def test_review_notes_say_what_was_not_observed(compiled):
     assert any("Recoverable conditions cannot be discovered" in n for n in cap.review)
 
 
+def test_policy_classifies_risk_that_the_run_cannot_see(page, live_app, tmp_path, env):
+    """A run watches a click succeed. It has no way to see that the click
+    committed something that cannot be undone, and the discovered draft recorded
+    exactly that mistake. The policy that permitted the action does know, so the
+    classification comes from there and lands in the recording."""
+    from src.safety.policy import Policy, PolicyGate
+
+    policy = Policy.load("policy/discovery.yaml")
+    surface = WebSurface(page, gate=PolicyGate(policy),
+                         mask_rules=policy.redaction.screenshot_mask)
+    log = RunLog(tmp_path / "runs", "disc-risk", Redactor())
+
+    result = discover(surface, log, live_app, [*happy_path(), finalize_move()])
+    assert result.ok, result.detail
+
+    cap = compile_capability(CompileRequest(
+        capability_id="meridian.stop_payment.place", result=result,
+        inputs=INPUT_SPECS, secrets=SECRET_SPECS,
+        app_profile=AppProfile(product="meridian-backoffice", tenant="meridian-cu",
+                               entry="${BASE_URL}/login"),
+        base_url=live_app, model="fake"))
+
+    submit = next(s for s in cap.steps if s.risk == "irreversible")
+    assert submit.policy and submit.policy.requires == "confirmation"
+    assert any("classified" in note and submit.id in note for note in cap.review)
+
+
 def test_compiling_an_unfinished_run_is_refused(run_bits, live_app):
     surface, log = run_bits
     result = discover(surface, log, live_app,

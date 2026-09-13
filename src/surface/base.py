@@ -258,6 +258,13 @@ class ActResult:
     attempts: list[Attempt] = field(default_factory=list)
     url_after: str = ""
     detail: str = ""
+    risk: str = "safe"
+    """How the gate classified this action.
+
+    Carried back so a recording can keep the classification. A run cannot tell
+    from a successful click that the action was irreversible, but the policy
+    that permitted it can.
+    """
 
 
 # ----------------------------------------------------------------------- errors

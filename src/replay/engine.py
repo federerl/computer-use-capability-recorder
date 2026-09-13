@@ -444,8 +444,7 @@ class ReplayEngine:
         evidence: dict[str, str] = {}
         try:
             path = self.log.dir / "failure" / f"{step_id}.png"
-            evidence["screenshot"] = self.log.relative(
-                self.surface.screenshot(path, mask=self._mask_locators()))
+            evidence["screenshot"] = self.log.relative(self.surface.screenshot(path))
         except Exception:
             pass
         try:
@@ -457,9 +456,6 @@ class ReplayEngine:
             pass
         evidence["url"] = self.surface.url()
         return evidence
-
-    def _mask_locators(self) -> list:
-        return []
 
     def _result(self, status: str, started: float, *, outputs=None, outcome=None,
                 error=None) -> ReplayResult:

@@ -23,7 +23,8 @@ from typing import Any
 from src.artifact.binding import TEMPLATABLE_FIELDS
 from src.artifact.schema import (
     AppProfile, Capability, Checkpoint, Condition, DiscoveredBy, Extraction,
-    OutputSpec, ParamSpec, Provenance, SecretRef, Step, TextPresent, ValueMatches,
+    OutputSpec, ParamSpec, Provenance, SecretRef, Step, StepPolicy, TextPresent,
+    ValueMatches,
 )
 from src.discovery.agent import DiscoveryResult
 from src.surface.base import Target
@@ -133,9 +134,26 @@ def _canonicalise(step, values: dict[str, str], base_url: str,
     target = _generalise_target(step.target, values, review, step.id) if step.target else None
     wait = _check_wait(step.wait, values, review, step.id)
 
+    risk = getattr(step, "risk", "safe")
+    policy = None
+    note = step.note
+
+    if risk != "safe":
+        # The classification comes from the policy that permitted the action,
+        # not from the run. A run watches a click succeed; it has no way to see
+        # that the click committed something that cannot be undone.
+        policy = StepPolicy(requires="confirmation")
+        note = (note + " " if note else "") + (
+            "Classified as irreversible by policy at record time.")
+        review.append(
+            f"Step {step.id}: classified {risk} by policy and gated on "
+            f"confirmation. Confirm the classification is right - both a missed "
+            f"one and a spurious one are expensive, in opposite ways."
+        )
+
     return Step(
         id=step.id, action=step.action, target=target, url=url, value=step.value,
-        key=step.key, wait=wait, note=step.note,
+        key=step.key, wait=wait, risk=risk, policy=policy, note=note,
     )
 
 

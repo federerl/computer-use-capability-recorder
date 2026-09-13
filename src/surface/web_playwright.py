@@ -12,6 +12,7 @@ from.
 
 from __future__ import annotations
 
+import re
 import time
 from pathlib import Path
 
@@ -35,12 +36,34 @@ class FrameNotFound(SurfaceError):
     control: the pane the step expected is not there at all."""
 
 
+_INLINE_FLAGS = re.compile(r"^\(\?[aimsux]+\)")
+
+
+def browser_regex(pattern: str) -> re.Pattern:
+    """Compile a pattern that will survive being handed to the browser.
+
+    A pattern written here is evaluated as a JavaScript regular expression, and
+    JavaScript has no inline flag syntax: `(?i)ssn` is a parse error there, not a
+    case-insensitive match. Left alone, a masking rule written the Python way
+    matches nothing at all and redaction silently stops happening - the worst
+    possible failure mode for a guardrail, because everything still appears to
+    work.
+
+    Inline flags are therefore lifted out, and matching is case-insensitive
+    regardless: a rule that missed `SSN` because it was written `ssn` would be a
+    trap rather than a policy.
+    """
+    return re.compile(_INLINE_FLAGS.sub("", pattern), re.IGNORECASE)
+
+
 class WebSurface:
     """A live browser page, observed through its accessibility tree."""
 
-    def __init__(self, page: Page, gate: Gate | None = None) -> None:
+    def __init__(self, page: Page, gate: Gate | None = None,
+                 mask_rules: list | None = None) -> None:
         self.page = page
         self.gate = gate or AllowAll()
+        self.mask_rules = mask_rules or []
 
     # ------------------------------------------------------------------ frames
 
@@ -207,10 +230,27 @@ class WebSurface:
             raise ValueError(f"unsupported action {action.action!r}")
 
         self._settle()
+        self._check_landing(action)
         return ActResult(
             ok=True, action=action.action, strategy_used=resolution.strategy,
             attempts=resolution.attempts, url_after=self.url(),
+            risk=getattr(self.gate, "risk_of", lambda _a: "safe")(action),
         )
+
+    def _check_landing(self, action: Action) -> None:
+        """Judge where the action actually took us.
+
+        A click cannot be vetted in advance - the allowlist protects the
+        application boundary, and a link is perfectly capable of crossing it.
+        Catching that only on the next action would mean the page had already
+        loaded, and with it whatever it does on load.
+        """
+        check = getattr(self.gate, "check_landing", None)
+        if check is None:
+            return
+        decision = check(self.url())
+        if decision.verdict == "block":
+            raise ActionBlocked(action, decision)
 
     def _settle(self, timeout_ms: int = SETTLE_MS) -> None:
         """Wait for the frame tree to stop changing.
@@ -253,12 +293,31 @@ class WebSurface:
     # ----------------------------------------------------------------- evidence
 
     def screenshot(self, path: str | Path, mask: list | None = None) -> str:
-        """Capture page state.
+        """Capture page state with sensitive regions painted over.
 
-        `mask` is applied by the browser at capture time, so a redacted region is
-        never written to disk in the first place.
+        Masking is applied by the browser as the image is produced, so an
+        unredacted copy never exists. Scrubbing a file afterwards would not be
+        redaction; it would be deletion after disclosure.
+
+        The mask is computed from the surface's own rules rather than passed in
+        by each caller, so there is no screenshot path that can forget.
         """
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
-        self.page.screenshot(path=str(p), full_page=True, mask=mask or [])
+        self.page.screenshot(path=str(p), full_page=True,
+                             mask=mask if mask is not None else self.mask_locators())
         return str(p)
+
+    def mask_locators(self) -> list:
+        """Every control on the page matching a masking rule, in every frame."""
+        found = []
+        for name in self.frames():
+            for rule in self.mask_rules:
+                try:
+                    locator = self.frame(name).get_by_role(
+                        rule.role, name=browser_regex(rule.name_matches))
+                    if locator.count():
+                        found.append(locator)
+                except (PWError, PWTimeout, SurfaceError):
+                    continue
+        return found

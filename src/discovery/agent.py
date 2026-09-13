@@ -55,6 +55,7 @@ class RecordedStep:
     key: str | None = None
     url: str | None = None
     wait: WaitSpec = field(default_factory=WaitSpec)
+    risk: str = "safe"
     note: str = ""
 
 
@@ -296,9 +297,9 @@ class DiscoveryRun:
         target = self.surface.target_for(node, observation)
 
         if name == "click":
-            self.surface.act(ClickAction(target=target))
-            self._record(RecordedStep(id=self._next_id(), action="click", target=target),
-                         before)
+            result = self.surface.act(ClickAction(target=target))
+            self._record(RecordedStep(id=self._next_id(), action="click", target=target,
+                                      risk=result.risk), before)
             return f"Clicked {node.role} {node.name!r}."
 
         if name == "press":

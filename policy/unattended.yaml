@@ -1,0 +1,47 @@
+name: unattended
+description: >
+  For a capability that has been reviewed and approved for running without a
+  person watching. Irreversible actions are permitted but still flagged into the
+  run log, so the record of what was committed is the same either way.
+
+  The allowlist and the action types do not relax. Being trusted to act alone is
+  not the same as being trusted to act anywhere.
+
+allowlist:
+  origins:
+    - http://127.0.0.1:5000
+    - http://127.0.0.1:5099
+    - http://127.0.0.1:5097
+  paths:
+    - "^/$"
+    - "^/login$"
+    - "^/logout$"
+    - "^/members(/.*)?$"
+    - "^/stoppay(/.*)?$"
+  deny_paths:
+    - "^/_control(/.*)?$"
+    - "^/admin(/.*)?$"
+
+action_types:
+  allow: [click, fill, select, press, navigate]
+  deny: [upload, download, accept_unknown_dialog]
+
+risk_rules:
+  - actions: [click]
+    name_matches: "(?i)\\b(submit|confirm|approve|post|authorise|authorize)\\b"
+    risk: irreversible
+    on_risky: flag
+    why: commits a servicing action that cannot be undone from the same screen
+  - actions: [click]
+    name_matches: "(?i)\\b(transfer|wire|disburse|close account|delete|remove|void)\\b"
+    risk: irreversible
+    on_risky: block
+    why: moves money or destroys a record, and no capability here should do either
+
+redaction:
+  patterns:
+    - "\\b\\d{3}-\\d{2}-\\d{4}\\b"
+    - "\\b(?:\\d[ -]?){13,19}\\b"
+  screenshot_mask:
+    - role: textbox
+      name_matches: "(?i)(ssn|social security|tax id|card|password|pin)"
