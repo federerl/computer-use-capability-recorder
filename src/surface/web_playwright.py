@@ -60,10 +60,11 @@ class WebSurface:
     """A live browser page, observed through its accessibility tree."""
 
     def __init__(self, page: Page, gate: Gate | None = None,
-                 mask_rules: list | None = None) -> None:
+                 mask_rules: list | None = None, lease=None) -> None:
         self.page = page
         self.gate = gate or AllowAll()
         self.mask_rules = mask_rules or []
+        self.lease = lease
 
     # ------------------------------------------------------------------ frames
 
@@ -198,16 +199,27 @@ class WebSurface:
 
     # ------------------------------------------------------------------- acting
 
-    def act(self, action: Action) -> ActResult:
+    def act(self, action: Action, confirmed: bool = False) -> ActResult:
         """The single door to the browser.
 
         Every action is gated before it is performed, so policy cannot be
         bypassed by reaching for the page directly from somewhere else.
+
+        `confirmed` carries a decision a person has already made about this
+        action. Confirmation is asked for in two independent places - the
+        capability may mark a step, and the policy may recognise the control -
+        and both have to accept the same answer. Without that, a person
+        approving a step is asked again by the other layer, forever.
         """
+        # Two independent refusals, in order. Control first: if a person holds
+        # the session, nothing automation wants to do matters yet.
+        if self.lease is not None:
+            self.lease.assert_automation_holds()
+
         decision = self.gate.check(action, self.url())
         if decision.verdict == "block":
             raise ActionBlocked(action, decision)
-        if decision.verdict == "confirm":
+        if decision.verdict == "confirm" and not confirmed:
             raise ConfirmationRequired(action, decision)
 
         if action.action == "navigate":

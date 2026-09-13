@@ -275,3 +275,11 @@ def test_every_policy_loads_and_denies_the_control_surface(path):
     assert policy.redaction.screenshot_mask, "no masking rules"
     for pattern in policy.redaction.patterns:
         re.compile(pattern)
+
+
+def test_the_profile_decides_whether_confirmation_is_required():
+    """Running unattended is a property of the profile, granted once to a
+    reviewed capability - not a flag an invocation waves at the gate."""
+    assert Policy.load(ATTENDED).confirmations == "require"
+    assert Policy.load(DISCOVERY).confirmations == "require"
+    assert Policy.load(UNATTENDED).confirmations == "permit"

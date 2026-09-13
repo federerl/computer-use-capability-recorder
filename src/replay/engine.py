@@ -101,16 +101,21 @@ def digest(inputs: dict[str, Any]) -> str:
 class ReplayEngine:
     def __init__(self, surface, capability: Capability, log, *,
                  runtime: dict[str, str] | None = None, llm: Any = None,
-                 allow_escalation: bool = False, auto_confirm: bool = False) -> None:
+                 allow_escalation: bool = False, auto_confirm: bool = False,
+                 supervisor=None) -> None:
         self.surface = surface
         self.capability = capability
         self.log = log
         self.runtime = runtime or {}
         self.llm = llm if llm is not None else NoLLM()
-        self.allow_escalation = allow_escalation
+        self.supervisor = supervisor
+        # A person being reachable is itself what makes escalation possible.
+        self.allow_escalation = allow_escalation or supervisor is not None
         self.auto_confirm = auto_confirm
 
         self.llm_calls = 0
+        self._confirmed: set[str] = set()
+        self._performed_by_hand: set[str] = set()
         self._inputs: dict[str, Any] = {}
         self._secrets: dict[str, str] = {}
         self._extracted: dict[str, Any] = {}
@@ -118,6 +123,7 @@ class ReplayEngine:
         self._recoveries: list[RecoveryReport] = []
         self._attempts: dict[str, int] = {}
         self._irreversible_done = False
+        self._control: dict[str, Any] = {"human_intervened": False}
 
     # ------------------------------------------------------------------ run
 
@@ -147,6 +153,8 @@ class ReplayEngine:
             return self._result("success", started, outputs=payload)
         if status == "business_outcome":
             return self._result("business_outcome", started, outcome=payload)
+        if status == "escalated":
+            return self._result("escalated", started, error=payload)
         return self._result("failed", started, error=payload)
 
     def _execute(self):
@@ -177,7 +185,20 @@ class ReplayEngine:
                 if kind == "retry":
                     continue
 
-            report = self._perform(step)
+            try:
+                report = self._perform(step)
+            except Escalation as escalation:
+                if self.supervisor is None:
+                    raise
+                action, payload = self._hand_over(escalation, step)
+                if action == "retry":
+                    continue
+                if action == "stop":
+                    return payload
+                # The person performed the step. Everything after it - the
+                # conditions, the checkpoint - still has to hold.
+                report = payload
+
             self._steps.append(report)
             if not report.ok:
                 return "failed", self._failure_from(step, report)
@@ -217,7 +238,8 @@ class ReplayEngine:
         # A step the capability marks as needing a decision is not something
         # replay is entitled to take on its own. Whether that means stopping or
         # bringing in a person is the caller's policy, not the engine's.
-        if step.policy and step.policy.requires == "confirmation" and not self.auto_confirm:
+        if (step.policy and step.policy.requires == "confirmation"
+                and not self.auto_confirm and step.id not in self._confirmed):
             if self.allow_escalation:
                 raise Escalation(
                     "CONFIRMATION_REQUIRED", step.id,
@@ -238,7 +260,12 @@ class ReplayEngine:
                               detail=f"{type(exc).__name__}: {exc}")
 
         try:
-            result = self.surface.act(action)
+            # Only an actual human decision satisfies the gate. Running
+            # unattended is a property of the policy profile, which expresses it
+            # by not demanding confirmation in the first place - letting the
+            # engine wave the gate through instead would collapse two
+            # independent layers into one.
+            result = self.surface.act(action, confirmed=step.id in self._confirmed)
         except TargetNotFound as exc:
             return StepReport(
                 step_id=step.id, action=step.action, ok=False,
@@ -301,6 +328,56 @@ class ReplayEngine:
         if source.from_secret:
             return self._secrets[source.from_secret]
         return source.literal or ""
+
+    # -------------------------------------------------------------- handover
+
+    def _hand_over(self, escalation: Escalation, step: Step):
+        """Bring in a person, then decide what the run does next.
+
+        The four outcomes are genuinely different, and collapsing any two would
+        be a real defect: performing a step a person already performed doubles
+        it; carrying on after a mismatch acts on a page nobody checked.
+        """
+        handover = self.supervisor.handle(
+            code=escalation.code, step_id=step.id, detail=escalation.detail,
+            surface=self.surface, capability=self.capability,
+            inputs_digest=digest(self._inputs),
+        )
+        self._control = {
+            "human_intervened": True,
+            "intervention_id": handover.intervention_id,
+            "verdict": handover.verdict,
+            "operator": handover.operator,
+            "note": handover.note,
+            "human_action_count": handover.human_actions,
+        }
+
+        if handover.verdict == "approved":
+            self._confirmed.add(step.id)
+            return "retry", None
+
+        if handover.verdict == "completed":
+            # The person did it. Doing it again would be a second stop payment.
+            self._performed_by_hand.add(step.id)
+            if step.risk == "irreversible":
+                self._irreversible_done = True
+            return "skip", StepReport(
+                step_id=step.id, action=step.action, ok=True, strategy="human",
+                detail=f"performed by {handover.operator or 'an operator'} "
+                       f"during intervention {handover.intervention_id}")
+
+        if handover.verdict == "state_mismatch":
+            return "stop", ("failed", Failure(
+                code="POST_HANDOFF_STATE_MISMATCH", step_id=step.id,
+                action=step.action,
+                expected="the session to still be somewhere this run can continue from",
+                observed=handover.detail, evidence=self._capture(step.id)))
+
+        return "stop", ("escalated", Failure(
+            code=escalation.code, step_id=step.id, action=step.action,
+            expected="a decision from an operator",
+            observed=handover.detail or f"the operator chose to {handover.verdict}",
+            evidence=self._capture(step.id)))
 
     # ----------------------------------------------------------- conditions
 
@@ -464,7 +541,7 @@ class ReplayEngine:
             capability_version=self.capability.version, run_id=self.log.run_id,
             inputs_digest=digest(self._inputs), outputs=outputs, outcome=outcome,
             error=error, steps=self._steps, recoveries=self._recoveries,
-            llm_calls=self.llm_calls,
+            control=self._control, llm_calls=self.llm_calls,
             elapsed_ms=int((time.monotonic() - started) * 1000),
         )
         self.log.event("replay_finished", status=status,
