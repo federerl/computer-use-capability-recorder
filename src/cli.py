@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -15,6 +16,7 @@ from src.artifact.compile import CompileRequest, compile_capability
 from src.discovery.agent import DiscoveryConfig, DiscoveryRun
 from src.discovery.brief import DiscoveryBrief
 from src.evidence.log import RunLog, new_run_id
+from src.replay.engine import InputError, ReplayEngine
 from src.safety.redaction import Redactor
 from src.surface.web_playwright import WebSurface
 
@@ -111,6 +113,73 @@ def discover(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def replay(args: argparse.Namespace) -> int:
+    load_dotenv()
+
+    capability = store.load(args.artifact)
+    inputs = json.loads(args.inputs) if args.inputs else {}
+    base_url = os.environ.get("BASE_URL", args.base_url)
+
+    if capability.approval_state != "approved" and not args.allow_draft:
+        print(f"{capability.id} is a draft. Replaying one unattended means "
+              f"trusting targeting nobody has reviewed.", file=sys.stderr)
+        for note in capability.review:
+            print(f"  - {note}", file=sys.stderr)
+        print("Pass --allow-draft to run it anyway.", file=sys.stderr)
+        return EXIT_USAGE
+
+    run_id = new_run_id("replay")
+    log = RunLog(args.evidence_root, run_id, Redactor())
+
+    from playwright.sync_api import sync_playwright
+
+    print(f"run {run_id}: {capability.id}@{capability.version} "
+          f"({capability.approval_state})")
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=args.headless)
+        page = browser.new_page()
+        try:
+            engine = ReplayEngine(
+                WebSurface(page), capability, log,
+                runtime={"BASE_URL": base_url},
+                auto_confirm=args.unattended,
+            )
+            result = engine.run(inputs)
+        except InputError as exc:
+            print(f"input rejected: {exc}", file=sys.stderr)
+            return EXIT_USAGE
+        finally:
+            browser.close()
+
+    print(f"\n{result.status}  ({result.elapsed_ms} ms, "
+          f"{result.llm_calls} model calls)")
+
+    if result.outputs:
+        for name, value in result.outputs.items():
+            print(f"  {name} = {value!r}")
+    if result.outcome:
+        print(f"  outcome  {result.outcome.outcome}  ({result.outcome.code})")
+        print(f"           {result.outcome.message}")
+    if result.recoveries:
+        for r in result.recoveries:
+            print(f"  recovered {r.code} at {r.step_id} "
+                  f"(attempt {r.attempt}, {r.then})" if r.resolved
+                  else f"  unrecovered {r.code} at {r.step_id}")
+    if result.error:
+        e = result.error
+        print(f"  {e.code} at step {e.step_id} ({e.action})")
+        print(f"    expected  {e.expected}")
+        print(f"    observed  {e.observed}")
+        for attempt in e.locator_attempts:
+            print(f"    tried     {attempt}")
+        for key, value in e.evidence.items():
+            print(f"    {key:<9} {value}")
+
+    print(f"\nevidence -> {log.dir}")
+    return result.exit_code
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="src.cli", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -126,6 +195,18 @@ def build_parser() -> argparse.ArgumentParser:
     d.add_argument("--headless", action="store_true",
                    help="run without a visible browser (default is visible)")
     d.set_defaults(func=discover)
+
+    r = sub.add_parser("replay", help="replay a capability; makes no model calls")
+    r.add_argument("--artifact", required=True)
+    r.add_argument("--inputs", default="{}", help="JSON object of input values")
+    r.add_argument("--base-url", default="http://127.0.0.1:5000")
+    r.add_argument("--evidence-root", default="evidence/replay")
+    r.add_argument("--unattended", action="store_true",
+                   help="perform steps the capability marks as needing "
+                        "confirmation, without one")
+    r.add_argument("--allow-draft", action="store_true")
+    r.add_argument("--headless", action="store_true")
+    r.set_defaults(func=replay)
 
     return parser
 

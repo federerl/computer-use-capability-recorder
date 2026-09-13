@@ -1,0 +1,1080 @@
+{
+  "schema_version": "1.0.0",
+  "id": "meridian.stop_payment.place",
+  "version": "1.1.0",
+  "title": "Place stop payment on a check",
+  "description": "Signs in to the Meridian CU back office, looks up a member by member number, opens the specified account type, and submits a stop payment for a given check number and reason. Returns the confirmation details.",
+  "approval_state": "approved",
+  "surface": {
+    "kind": "web",
+    "engine": "chromium"
+  },
+  "app_profile": {
+    "product": "meridian-backoffice",
+    "product_version": "3.2",
+    "tenant": "meridian-cu",
+    "entry": "${BASE_URL}/login"
+  },
+  "inputs": [
+    {
+      "name": "member_id",
+      "type": "string",
+      "required": true,
+      "pattern": "^[0-9]{6}$",
+      "description": "Member number as printed on the servicing record.",
+      "sensitivity": "pii_id",
+      "example": "100482"
+    },
+    {
+      "name": "account_kind",
+      "type": "string",
+      "required": true,
+      "enum": [
+        "Checking",
+        "Savings"
+      ],
+      "description": "Which of the member's accounts the check was drawn on.",
+      "sensitivity": "none",
+      "example": "Checking"
+    },
+    {
+      "name": "check_number",
+      "type": "string",
+      "required": true,
+      "pattern": "^[0-9]{1,6}$",
+      "description": "Number of the check to stop.",
+      "sensitivity": "none",
+      "example": "1043"
+    },
+    {
+      "name": "reason",
+      "type": "string",
+      "required": true,
+      "enum": [
+        "lost_check",
+        "stolen_check",
+        "dispute",
+        "other"
+      ],
+      "description": "Why the stop payment is being placed.",
+      "sensitivity": "none",
+      "example": "lost_check"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "confirmation_number",
+      "type": "string",
+      "required": true,
+      "pattern": "^SP-\\d+$",
+      "description": "Confirmation number of the stop payment.",
+      "sensitivity": "none"
+    },
+    {
+      "name": "stop_payment_fee",
+      "type": "string",
+      "required": true,
+      "pattern": "^\\d+\\.\\d{2}$",
+      "description": "Fee charged for the stop payment.",
+      "sensitivity": "none"
+    },
+    {
+      "name": "masked_account_number",
+      "type": "string",
+      "required": true,
+      "pattern": "^\\*{4}\\d{4}$",
+      "description": "Masked account number the stop payment was placed on.",
+      "sensitivity": "account"
+    },
+    {
+      "name": "check_number_confirmed",
+      "type": "string",
+      "required": true,
+      "pattern": "^\\d+$",
+      "description": "Check number the stop payment applies to.",
+      "sensitivity": "none"
+    },
+    {
+      "name": "placed_at",
+      "type": "string",
+      "required": true,
+      "description": "Timestamp when the stop payment was placed.",
+      "sensitivity": "none"
+    }
+  ],
+  "secrets": [
+    {
+      "name": "operator_user",
+      "ref": "env:BACKOFFICE_USER",
+      "used_in_steps": [
+        "s2"
+      ]
+    },
+    {
+      "name": "operator_password",
+      "ref": "env:BACKOFFICE_PASSWORD",
+      "used_in_steps": [
+        "s3"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "s1",
+      "action": "navigate",
+      "url": "${BASE_URL}/login",
+      "wait": {
+        "until": "settled",
+        "scope": {
+          "frame": "main"
+        },
+        "timeout_ms": 8000
+      },
+      "risk": "safe",
+      "note": ""
+    },
+    {
+      "id": "s2",
+      "action": "fill",
+      "target": {
+        "scope": {
+          "frame": "main"
+        },
+        "primary": {
+          "by": "role_name",
+          "role": "textbox",
+          "name": "Operator ID"
+        },
+        "fallbacks": [
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_anchor": "Operator ID",
+            "role": "textbox",
+            "name": "Operator ID"
+          },
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_name": "Operator ID",
+            "role": "textbox",
+            "name": "Operator ID"
+          },
+          {
+            "by": "css",
+            "value": "form > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > input[name=\"f1\"]",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": true
+        }
+      },
+      "value": {
+        "from_secret": "operator_user"
+      },
+      "wait": {
+        "until": "settled",
+        "scope": {
+          "frame": "main"
+        },
+        "timeout_ms": 8000
+      },
+      "risk": "safe",
+      "note": ""
+    },
+    {
+      "id": "s3",
+      "action": "fill",
+      "target": {
+        "scope": {
+          "frame": "main"
+        },
+        "primary": {
+          "by": "role_name",
+          "role": "textbox",
+          "name": "Password"
+        },
+        "fallbacks": [
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_anchor": "Password",
+            "role": "textbox",
+            "name": "Password"
+          },
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_name": "Password",
+            "role": "textbox",
+            "name": "Password"
+          },
+          {
+            "by": "css",
+            "value": "form > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > input[name=\"f2\"]",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": true
+        }
+      },
+      "value": {
+        "from_secret": "operator_password"
+      },
+      "wait": {
+        "until": "settled",
+        "scope": {
+          "frame": "main"
+        },
+        "timeout_ms": 8000
+      },
+      "risk": "safe",
+      "note": ""
+    },
+    {
+      "id": "s4",
+      "action": "click",
+      "target": {
+        "scope": {
+          "frame": "main"
+        },
+        "primary": {
+          "by": "role_name",
+          "role": "button",
+          "name": "Sign On"
+        },
+        "fallbacks": [
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_name": "Sign On",
+            "role": "button",
+            "name": "Sign On"
+          },
+          {
+            "by": "text_exact",
+            "text": "Sign On"
+          },
+          {
+            "by": "css",
+            "value": "form > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > input",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": true
+        }
+      },
+      "wait": {
+        "until": "text",
+        "text": "Member Search",
+        "scope": {
+          "frame": "main"
+        },
+        "timeout_ms": 8000
+      },
+      "risk": "safe",
+      "note": ""
+    },
+    {
+      "id": "s5",
+      "action": "fill",
+      "target": {
+        "scope": {
+          "frame": "main"
+        },
+        "primary": {
+          "by": "role_name",
+          "role": "textbox",
+          "name": "Member Number"
+        },
+        "fallbacks": [
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_anchor": "Member Number",
+            "role": "textbox",
+            "name": "Member Number"
+          },
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_name": "Member Number Search",
+            "role": "textbox",
+            "name": "Member Number"
+          },
+          {
+            "by": "css",
+            "value": "form > table > tbody > tr > td:nth-of-type(2) > input[name=\"f3\"]",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": true
+        }
+      },
+      "value": {
+        "from_input": "member_id"
+      },
+      "wait": {
+        "until": "settled",
+        "scope": {
+          "frame": "main"
+        },
+        "timeout_ms": 8000
+      },
+      "risk": "safe",
+      "note": ""
+    },
+    {
+      "id": "s6",
+      "action": "click",
+      "target": {
+        "scope": {
+          "frame": "main"
+        },
+        "primary": {
+          "by": "role_name",
+          "role": "button",
+          "name": "Search"
+        },
+        "fallbacks": [
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_anchor": "Member Number",
+            "role": "button",
+            "name": "Search"
+          },
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_name": "Member Number 100482 Search",
+            "role": "button",
+            "name": "Search"
+          },
+          {
+            "by": "text_exact",
+            "text": "Search"
+          },
+          {
+            "by": "css",
+            "value": "form > table > tbody > tr > td:nth-of-type(3) > input",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": true
+        }
+      },
+      "wait": {
+        "until": "settled",
+        "scope": {
+          "frame": "main"
+        },
+        "timeout_ms": 8000
+      },
+      "risk": "safe",
+      "note": ""
+    },
+    {
+      "id": "s7",
+      "action": "click",
+      "target": {
+        "scope": {
+          "frame": "main"
+        },
+        "primary": {
+          "by": "role_name",
+          "role": "link",
+          "name": "View"
+        },
+        "fallbacks": [
+          {
+            "by": "text_exact",
+            "text": "View"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": false,
+          "nth": 0
+        }
+      },
+      "wait": {
+        "until": "role",
+        "role": "link",
+        "name": "Accounts",
+        "scope": {
+          "frame": "detail"
+        },
+        "timeout_ms": 8000
+      },
+      "risk": "safe",
+      "note": "Results list one row per account and every row for a member opens the same servicing record, so no cell distinguishes them. Positional resolution is deliberate here and is the only step that uses it."
+    },
+    {
+      "id": "s8",
+      "action": "click",
+      "target": {
+        "scope": {
+          "frame": "detail"
+        },
+        "primary": {
+          "by": "role_name",
+          "role": "link",
+          "name": "Accounts"
+        },
+        "fallbacks": [
+          {
+            "by": "text_exact",
+            "text": "Accounts"
+          },
+          {
+            "by": "css",
+            "value": "html > body > div:nth-of-type(1) > a:nth-of-type(2)",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": true
+        }
+      },
+      "wait": {
+        "until": "role",
+        "role": "link",
+        "name": "Stop Pay",
+        "scope": {
+          "frame": "detail"
+        },
+        "timeout_ms": 8000
+      },
+      "risk": "safe",
+      "note": ""
+    },
+    {
+      "id": "s9",
+      "action": "click",
+      "target": {
+        "scope": {
+          "frame": "detail"
+        },
+        "primary": {
+          "by": "scoped_role",
+          "scope_role": "row",
+          "scope_anchor": "${account_kind}",
+          "role": "link",
+          "name": "Stop Pay"
+        },
+        "fallbacks": [
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_name": "Checking ****4821 4182.55 Stop Pay",
+            "role": "link",
+            "name": "Stop Pay"
+          },
+          {
+            "by": "role_name",
+            "role": "link",
+            "name": "Stop Pay"
+          },
+          {
+            "by": "text_exact",
+            "text": "Stop Pay"
+          },
+          {
+            "by": "css",
+            "value": "div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4) > a",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": true
+        }
+      },
+      "wait": {
+        "until": "text",
+        "text": "Place Stop Payment",
+        "scope": {
+          "frame": "detail"
+        },
+        "timeout_ms": 8000
+      },
+      "risk": "safe",
+      "note": ""
+    },
+    {
+      "id": "s10",
+      "action": "fill",
+      "target": {
+        "scope": {
+          "frame": "detail"
+        },
+        "primary": {
+          "by": "scoped_role",
+          "scope_role": "row",
+          "scope_anchor": "Check Number",
+          "role": "textbox"
+        },
+        "fallbacks": [
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_name": "Check Number",
+            "role": "textbox"
+          },
+          {
+            "by": "css",
+            "value": "form > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > input[name=\"f5\"]",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": true
+        }
+      },
+      "value": {
+        "from_input": "check_number"
+      },
+      "wait": {
+        "until": "settled",
+        "scope": {
+          "frame": "main"
+        },
+        "timeout_ms": 8000
+      },
+      "risk": "safe",
+      "note": ""
+    },
+    {
+      "id": "s11",
+      "action": "select",
+      "target": {
+        "scope": {
+          "frame": "detail"
+        },
+        "primary": {
+          "by": "scoped_role",
+          "scope_role": "row",
+          "scope_anchor": "Reason",
+          "role": "combobox"
+        },
+        "fallbacks": [
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_name": "Reason -- select --",
+            "role": "combobox"
+          },
+          {
+            "by": "css",
+            "value": "form > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > select[name=\"f6\"]",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": true
+        }
+      },
+      "value": {
+        "from_input": "reason"
+      },
+      "wait": {
+        "until": "settled",
+        "scope": {
+          "frame": "main"
+        },
+        "timeout_ms": 8000
+      },
+      "risk": "safe",
+      "note": ""
+    },
+    {
+      "id": "s12",
+      "action": "click",
+      "target": {
+        "scope": {
+          "frame": "detail"
+        },
+        "primary": {
+          "by": "role_name",
+          "role": "button",
+          "name": "Submit Stop Payment"
+        },
+        "fallbacks": [
+          {
+            "by": "scoped_role",
+            "scope_role": "row",
+            "scope_name": "Submit Stop Payment",
+            "role": "button",
+            "name": "Submit Stop Payment"
+          },
+          {
+            "by": "text_exact",
+            "text": "Submit Stop Payment"
+          },
+          {
+            "by": "css",
+            "value": "form > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > input",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": true
+        }
+      },
+      "wait": {
+        "until": "text",
+        "text": "Stop Payment Confirmed",
+        "scope": {
+          "frame": "detail"
+        },
+        "timeout_ms": 15000
+      },
+      "risk": "irreversible",
+      "policy": {
+        "requires": "confirmation"
+      },
+      "note": "Places a fee-bearing hold that cannot be undone from this screen."
+    }
+  ],
+  "checkpoints": [
+    {
+      "after_step": "s12",
+      "assertions": [
+        {
+          "kind": "text_present",
+          "value": "Stop Payment Confirmed",
+          "scope": {
+            "frame": "detail"
+          }
+        },
+        {
+          "kind": "matches",
+          "extract": "confirmation_number",
+          "pattern": "^SP-\\d+$"
+        },
+        {
+          "kind": "matches",
+          "extract": "stop_payment_fee",
+          "pattern": "^\\d+\\.\\d{2}$"
+        },
+        {
+          "kind": "matches",
+          "extract": "masked_account_number",
+          "pattern": "^\\*{4}\\d{4}$"
+        },
+        {
+          "kind": "matches",
+          "extract": "check_number_confirmed",
+          "pattern": "^\\d+$"
+        }
+      ]
+    }
+  ],
+  "extract": [
+    {
+      "name": "confirmation_number",
+      "target": {
+        "scope": {
+          "frame": "detail"
+        },
+        "primary": {
+          "by": "scoped_role",
+          "scope_role": "row",
+          "scope_anchor": "Confirmation Number",
+          "role": "cell"
+        },
+        "fallbacks": [
+          {
+            "by": "css",
+            "value": "body > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2)",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": false,
+          "nth": 1
+        }
+      },
+      "take": "text",
+      "transform": "trim"
+    },
+    {
+      "name": "stop_payment_fee",
+      "target": {
+        "scope": {
+          "frame": "detail"
+        },
+        "primary": {
+          "by": "scoped_role",
+          "scope_role": "row",
+          "scope_anchor": "Stop Payment Fee",
+          "role": "cell"
+        },
+        "fallbacks": [
+          {
+            "by": "css",
+            "value": "body > div:nth-of-type(2) > table > tbody > tr:nth-of-type(5) > td:nth-of-type(2)",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": false,
+          "nth": 1
+        }
+      },
+      "take": "text",
+      "transform": "trim"
+    },
+    {
+      "name": "masked_account_number",
+      "target": {
+        "scope": {
+          "frame": "detail"
+        },
+        "primary": {
+          "by": "scoped_role",
+          "scope_role": "row",
+          "scope_anchor": "Account",
+          "role": "cell"
+        },
+        "fallbacks": [
+          {
+            "by": "css",
+            "value": "body > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2)",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": false,
+          "nth": 1
+        }
+      },
+      "take": "text",
+      "transform": "trim"
+    },
+    {
+      "name": "check_number_confirmed",
+      "target": {
+        "scope": {
+          "frame": "detail"
+        },
+        "primary": {
+          "by": "scoped_role",
+          "scope_role": "row",
+          "scope_anchor": "Check Number",
+          "role": "cell"
+        },
+        "fallbacks": [
+          {
+            "by": "css",
+            "value": "body > div:nth-of-type(2) > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2)",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": false,
+          "nth": 1
+        }
+      },
+      "take": "text",
+      "transform": "trim"
+    },
+    {
+      "name": "placed_at",
+      "target": {
+        "scope": {
+          "frame": "detail"
+        },
+        "primary": {
+          "by": "scoped_role",
+          "scope_role": "row",
+          "scope_anchor": "Placed At",
+          "role": "cell"
+        },
+        "fallbacks": [
+          {
+            "by": "css",
+            "value": "body > div:nth-of-type(2) > table > tbody > tr:nth-of-type(6) > td:nth-of-type(2)",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": false,
+          "nth": 1
+        }
+      },
+      "take": "text",
+      "transform": "trim"
+    }
+  ],
+  "conditions": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "class": "business_outcome",
+      "detect": {
+        "kind": "text_present",
+        "value": "No records match",
+        "scope": {
+          "frame": "main"
+        }
+      },
+      "verified": true,
+      "applies_to": "any",
+      "message": "No member exists with the supplied member number.",
+      "outcome": "member_not_found",
+      "max_attempts": 1,
+      "terminal": true
+    },
+    {
+      "code": "ACCOUNT_RESTRICTED",
+      "class": "business_outcome",
+      "detect": {
+        "kind": "text_present",
+        "value": "cannot service restricted accounts",
+        "scope": {
+          "frame": "detail"
+        }
+      },
+      "verified": true,
+      "applies_to": [
+        "s8",
+        "s9"
+      ],
+      "message": "The signed-on operator may not service this member.",
+      "outcome": "account_restricted",
+      "max_attempts": 1,
+      "terminal": true
+    },
+    {
+      "code": "CHECK_ALREADY_CLEARED",
+      "class": "business_outcome",
+      "detect": {
+        "kind": "text_present",
+        "value": "has already cleared",
+        "scope": {
+          "frame": "detail"
+        }
+      },
+      "verified": true,
+      "applies_to": [
+        "s12"
+      ],
+      "message": "The check has cleared and can no longer be stopped.",
+      "outcome": "check_already_cleared",
+      "max_attempts": 1,
+      "terminal": true
+    },
+    {
+      "code": "CHECK_NOT_ON_ACCOUNT",
+      "class": "business_outcome",
+      "detect": {
+        "kind": "text_present",
+        "value": "was not found on this account",
+        "scope": {
+          "frame": "detail"
+        }
+      },
+      "verified": true,
+      "applies_to": [
+        "s12"
+      ],
+      "message": "No such check is drawn on that account.",
+      "outcome": "check_not_on_account",
+      "max_attempts": 1,
+      "terminal": true
+    },
+    {
+      "code": "SYSTEM_NOTICE",
+      "class": "recoverable",
+      "detect": {
+        "kind": "role_visible",
+        "role": "dialog",
+        "name": "System Notice",
+        "scope": {
+          "frame": "any"
+        }
+      },
+      "verified": true,
+      "applies_to": "any",
+      "message": "A maintenance interstitial appeared over the working pane.",
+      "recover": {
+        "steps": [
+          {
+            "id": "r1",
+            "action": "click",
+            "target": {
+              "scope": {
+                "frame": "any"
+              },
+              "primary": {
+                "by": "role_name",
+                "role": "button",
+                "name": "Continue"
+              },
+              "fallbacks": [],
+              "disambiguation": {
+                "expect_unique": true
+              }
+            },
+            "wait": {
+              "until": "settled",
+              "scope": {
+                "frame": "main"
+              },
+              "timeout_ms": 8000
+            },
+            "risk": "safe",
+            "note": ""
+          }
+        ],
+        "then": "retry_current_step"
+      },
+      "max_attempts": 2,
+      "terminal": false
+    },
+    {
+      "code": "SESSION_EXPIRED",
+      "class": "recoverable",
+      "detect": {
+        "kind": "text_present",
+        "value": "Your session has expired",
+        "scope": {
+          "frame": "any"
+        }
+      },
+      "verified": true,
+      "applies_to": "any",
+      "message": "The servicing session timed out mid-flow.",
+      "recover": {
+        "steps": [
+          {
+            "id": "r2",
+            "action": "navigate",
+            "url": "${BASE_URL}/login",
+            "wait": {
+              "until": "settled",
+              "scope": {
+                "frame": "main"
+              },
+              "timeout_ms": 8000
+            },
+            "risk": "safe",
+            "note": ""
+          },
+          {
+            "id": "r3",
+            "action": "fill",
+            "target": {
+              "scope": {
+                "frame": "main"
+              },
+              "primary": {
+                "by": "role_name",
+                "role": "textbox",
+                "name": "Operator ID"
+              },
+              "fallbacks": [],
+              "disambiguation": {
+                "expect_unique": true
+              }
+            },
+            "value": {
+              "from_secret": "operator_user"
+            },
+            "wait": {
+              "until": "settled",
+              "scope": {
+                "frame": "main"
+              },
+              "timeout_ms": 8000
+            },
+            "risk": "safe",
+            "note": ""
+          },
+          {
+            "id": "r4",
+            "action": "fill",
+            "target": {
+              "scope": {
+                "frame": "main"
+              },
+              "primary": {
+                "by": "role_name",
+                "role": "textbox",
+                "name": "Password"
+              },
+              "fallbacks": [],
+              "disambiguation": {
+                "expect_unique": true
+              }
+            },
+            "value": {
+              "from_secret": "operator_password"
+            },
+            "wait": {
+              "until": "settled",
+              "scope": {
+                "frame": "main"
+              },
+              "timeout_ms": 8000
+            },
+            "risk": "safe",
+            "note": ""
+          },
+          {
+            "id": "r5",
+            "action": "click",
+            "target": {
+              "scope": {
+                "frame": "main"
+              },
+              "primary": {
+                "by": "role_name",
+                "role": "button",
+                "name": "Sign On"
+              },
+              "fallbacks": [],
+              "disambiguation": {
+                "expect_unique": true
+              }
+            },
+            "wait": {
+              "until": "settled",
+              "scope": {
+                "frame": "main"
+              },
+              "timeout_ms": 8000
+            },
+            "risk": "safe",
+            "note": ""
+          }
+        ],
+        "then": "restart_flow"
+      },
+      "max_attempts": 1,
+      "terminal": false
+    }
+  ],
+  "provenance": {
+    "discovered_by": {
+      "model": "claude-opus-5",
+      "run_id": "disc-20260912T203547Z",
+      "steps_taken": 12
+    },
+    "trace_ref": "evidence/discovery/disc-20260912T203547Z/log.jsonl",
+    "recorded_at": "2026-09-12T20:37:00.363003Z",
+    "human_edits": [
+      "s7: replaced a target anchored on this member's account number, and a wait on this member's number, with positional resolution and a wait on a control that is present for every member.",
+      "s8: replaced a wait on a heading carrying the member's name.",
+      "s12: reclassified from safe to irreversible and gated on confirmation. The run could not know the action places a fee-bearing hold; risk is a policy judgement.",
+      "masked_account_number: marked as account data for redaction.",
+      "MEMBER_NOT_FOUND: the run anticipated this state without reaching it and guessed the wording as 'No members found'. The screen reads 'No records match'. Corrected, and every condition checked against the real state.",
+      "Added three business outcomes and two recoverable conditions for states a successful run never reached."
+    ]
+  },
+  "review": []
+}

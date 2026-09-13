@@ -279,6 +279,15 @@ class Condition(Strict):
     code: str
     klass: Literal["business_outcome", "recoverable", "hard"] = Field(alias="class")
     detect: Detector
+    verified: bool = False
+    """Whether this detector has been seen to fire against the real state.
+
+    A discovery run that succeeds never reaches the states it is describing, so
+    anything it anticipates is a guess about wording it has not read. A guessed
+    detector is worse than none: it never matches, the state it was meant to
+    catch falls through as unknown, and the capability looks like it has
+    coverage it does not have. Unverified conditions therefore block approval.
+    """
     applies_to: Literal["any"] | list[str] = "any"
     message: str = ""
     outcome: str | None = None
@@ -443,6 +452,18 @@ class Capability(Strict):
             raise ValueError("duplicate extraction names")
 
         self._check_placeholders(input_names)
+
+        if self.approval_state == "approved":
+            unverified = [c.code for c in self.conditions if not c.verified]
+            if unverified:
+                raise ValueError(
+                    f"cannot approve with unverified conditions {sorted(unverified)}; "
+                    f"a detector nobody has seen fire is not coverage"
+                )
+            if self.review:
+                raise ValueError(
+                    f"cannot approve with {len(self.review)} open review note(s)"
+                )
         return self
 
     def _check_placeholders(self, input_names: set[str]) -> None:
