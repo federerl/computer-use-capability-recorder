@@ -1,0 +1,11 @@
+run replay-20260914T043642Z: meridian.stop_payment.place@1.1.0 (approved)  policy unattended
+
+failed  (18812 ms, 0 model calls)
+  CHECKPOINT_FAILED at step s12 (click)
+    expected  text_present 'Stop Payment Confirmed' in frame detail
+    observed  frame detail reads: 'Request queued for overnight processing.'
+    screenshot evidence/replay/.staging-08-failed-checkpoint/replay-20260914T043642Z/failure/s12.png
+    snapshot  evidence/replay/.staging-08-failed-checkpoint/replay-20260914T043642Z/failure/s12.txt
+    url       http://127.0.0.1:5000/members/100482
+
+evidence -> evidence\replay\.staging-08-failed-checkpoint\replay-20260914T043642Z

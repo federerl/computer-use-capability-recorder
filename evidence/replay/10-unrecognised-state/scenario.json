@@ -1,0 +1,7 @@
+{
+  "name": "10-unrecognised-state",
+  "demonstrates": "A blocking dialog no condition declares. Never treated as success.",
+  "fault_injected": "security_challenge",
+  "command": "src.cli replay --artifact capabilities/meridian.stop_payment.place.json --unattended --input member_id=100482 --input account_kind=Checking --input check_number=1043 --input reason=lost_check",
+  "exit_code": 1
+}

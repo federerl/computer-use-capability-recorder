@@ -1,0 +1,11 @@
+run replay-20260914T043720Z: meridian.stop_payment.place@1.1.0 (approved)  policy attended
+
+failed  (3391 ms, 0 model calls)
+  CONFIRMATION_REQUIRED at step s12 (click)
+    expected  click on the recorded target
+    observed  step is marked irreversible and requires confirmation, which this invocation cannot obtain
+    screenshot evidence/replay/.staging-11-refused-confirmation-required/replay-20260914T043720Z/failure/s12.png
+    snapshot  evidence/replay/.staging-11-refused-confirmation-required/replay-20260914T043720Z/failure/s12.txt
+    url       http://127.0.0.1:5000/members/100482
+
+evidence -> evidence\replay\.staging-11-refused-confirmation-required\replay-20260914T043720Z

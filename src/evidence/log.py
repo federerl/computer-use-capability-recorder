@@ -78,4 +78,15 @@ class RunLog:
                 self._path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
     def relative(self, path: Path) -> str:
-        return str(path).replace("\\", "/")
+        """A path a reader can follow.
+
+        Evidence is written once and read later, often from a checkout on a
+        different machine. An absolute path recorded here points at a directory
+        that may not exist by then - and if the run was staged and moved, does
+        not exist even locally. Anything under the working directory is recorded
+        relative to it, with forward slashes so the two platforms agree.
+        """
+        try:
+            return str(Path(path).resolve().relative_to(Path.cwd())).replace("\\", "/")
+        except ValueError:
+            return str(path).replace("\\", "/")

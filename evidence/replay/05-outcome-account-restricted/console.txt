@@ -1,0 +1,7 @@
+run replay-20260914T043611Z: meridian.stop_payment.place@1.1.0 (approved)  policy unattended
+
+business_outcome  (10391 ms, 0 model calls)
+  outcome  account_restricted  (ACCOUNT_RESTRICTED)
+           The signed-on operator may not service this member.
+
+evidence -> evidence\replay\.staging-05-outcome-account-restricted\replay-20260914T043611Z

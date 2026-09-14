@@ -63,7 +63,7 @@ def test_replay_succeeds_on_the_recorded_inputs(engine_for):
     assert result.status == "success", result.error
     assert result.outputs["confirmation_number"].startswith("SP-")
     assert result.outputs["masked_account_number"] == "****4821"
-    assert result.outputs["check_number_confirmed"] == "1043"
+    assert result.outputs["check_number"] == "1043"
     assert result.exit_code == 0
 
 
@@ -75,7 +75,7 @@ def test_replay_generalises_to_different_inputs(engine_for):
 
     assert result.status == "success", result.error
     assert result.outputs["masked_account_number"] == "****7715"
-    assert result.outputs["check_number_confirmed"] == "2210"
+    assert result.outputs["check_number"] == "2210"
 
 
 def test_replay_consults_no_model(engine_for):
@@ -276,7 +276,12 @@ def test_secrets_never_reach_the_replay_evidence(engine_for):
 
 def test_the_approved_capability_records_what_review_changed(capability):
     assert capability.approval_state == "approved"
-    assert capability.version == "1.2.0"
+
+    # Review produced a new version rather than editing the discovered one in
+    # place, so the two can be compared.
+    discovered = store.load("evidence/artifacts/meridian.stop_payment.place.json")
+    assert discovered.approval_state == "draft"
+    assert capability.version != discovered.version
     assert not capability.review, "an approved capability has nothing outstanding"
     assert len(capability.provenance.human_edits) >= 4
     assert capability.provenance.discovered_by.model == "claude-opus-5"

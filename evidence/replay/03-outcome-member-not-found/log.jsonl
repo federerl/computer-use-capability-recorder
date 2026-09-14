@@ -1,0 +1,9 @@
+{"ts": "2026-09-14T04:35:49.417+00:00", "elapsed_ms": 562, "kind": "replay_started", "capability": "meridian.stop_payment.place", "version": "1.1.0", "inputs_digest": "ae424bb7864b0357", "approval_state": "approved"}
+{"ts": "2026-09-14T04:35:49.728+00:00", "elapsed_ms": 875, "kind": "step", "step_id": "s1", "action": "navigate", "strategy": "", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:35:50.028+00:00", "elapsed_ms": 1170, "kind": "step", "step_id": "s2", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:35:50.296+00:00", "elapsed_ms": 1437, "kind": "step", "step_id": "s3", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:35:50.499+00:00", "elapsed_ms": 1640, "kind": "step", "step_id": "s4", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members"}
+{"ts": "2026-09-14T04:35:50.774+00:00", "elapsed_ms": 1920, "kind": "step", "step_id": "s5", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members"}
+{"ts": "2026-09-14T04:35:51.089+00:00", "elapsed_ms": 2234, "kind": "step", "step_id": "s6", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members?f3=999999"}
+{"ts": "2026-09-14T04:35:51.102+00:00", "elapsed_ms": 2250, "kind": "condition_matched", "code": "MEMBER_NOT_FOUND", "klass": "business_outcome", "step": "s6", "detector": "text_present 'No records match' in frame main"}
+{"ts": "2026-09-14T04:35:51.104+00:00", "elapsed_ms": 2250, "kind": "replay_finished", "status": "business_outcome", "outputs": null, "outcome": {"code": "MEMBER_NOT_FOUND", "outcome": "member_not_found", "message": "No member exists with the supplied member number.", "step_id": "s6"}, "error": null, "llm_calls": 0}

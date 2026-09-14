@@ -1,0 +1,7 @@
+{
+  "name": "12-rejected-bad-input",
+  "demonstrates": "Arguments that do not satisfy the contract, refused before the browser opens.",
+  "fault_injected": null,
+  "command": "src.cli replay --artifact capabilities/meridian.stop_payment.place.json --unattended --input member_id=12 --input account_kind=Checking --input check_number=1043 --input reason=lost_check",
+  "exit_code": 2
+}

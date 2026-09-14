@@ -1,0 +1,12 @@
+run replay-20260914T043623Z: meridian.stop_payment.place@1.1.0 (approved)  policy unattended
+
+success  (12922 ms, 0 model calls)
+  confirmation_number = 'SP-98744383'
+  stop_payment_fee = '32.00'
+  masked_account_number = '****4821'
+  check_number = '1043'
+  reason = 'lost_check'
+  placed_at = '2026-09-14T04:36:36+00:00'
+  recovered SESSION_EXPIRED at s4 (attempt 1, restart_flow)
+
+evidence -> evidence\replay\.staging-06-recovered-session-expired\replay-20260914T043623Z

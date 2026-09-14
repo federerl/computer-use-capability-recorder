@@ -1,0 +1,7 @@
+run replay-20260914T043551Z: meridian.stop_payment.place@1.1.0 (approved)  policy unattended
+
+business_outcome  (18702 ms, 0 model calls)
+  outcome  check_already_cleared  (CHECK_ALREADY_CLEARED)
+           The check has cleared and can no longer be stopped.
+
+evidence -> evidence\replay\.staging-04-outcome-check-already-cleared\replay-20260914T043551Z

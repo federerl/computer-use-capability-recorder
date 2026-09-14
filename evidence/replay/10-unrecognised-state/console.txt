@@ -1,0 +1,14 @@
+run replay-20260914T043707Z: meridian.stop_payment.place@1.1.0 (approved)  policy unattended
+
+failed  (10797 ms, 0 model calls)
+  TARGET_NOT_FOUND at step s10 (fill)
+    expected  fill on the recorded target
+    observed  no unique match for the recorded target
+    tried     scoped_role({'scope_role': 'row', 'scope_anchor': 'Check Number', 'role': 'textbox'}) -> 0 match(es)
+    tried     scoped_role({'scope_role': 'row', 'scope_name': 'Check Number', 'role': 'textbox'}) -> 0 match(es)
+    tried     css({'value': 'form > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > input[name="f5"]'}) -> 0 match(es)
+    screenshot evidence/replay/.staging-10-unrecognised-state/replay-20260914T043707Z/failure/s10.png
+    snapshot  evidence/replay/.staging-10-unrecognised-state/replay-20260914T043707Z/failure/s10.txt
+    url       http://127.0.0.1:5000/members/100482
+
+evidence -> evidence\replay\.staging-10-unrecognised-state\replay-20260914T043707Z

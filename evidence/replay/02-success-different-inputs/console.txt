@@ -1,0 +1,11 @@
+run replay-20260914T043543Z: meridian.stop_payment.place@1.1.0 (approved)  policy unattended
+
+success  (3718 ms, 0 model calls)
+  confirmation_number = 'SP-71596105'
+  stop_payment_fee = '32.00'
+  masked_account_number = '****7715'
+  check_number = '2210'
+  reason = 'stolen_check'
+  placed_at = '2026-09-14T04:35:47+00:00'
+
+evidence -> evidence\replay\.staging-02-success-different-inputs\replay-20260914T043543Z

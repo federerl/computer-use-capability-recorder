@@ -1,0 +1,7 @@
+{
+  "name": "08-failed-checkpoint",
+  "demonstrates": "The click works and the page settles, but it is not the confirmation screen. Without a checkpoint this would report success.",
+  "fault_injected": "wrong_confirmation",
+  "command": "src.cli replay --artifact capabilities/meridian.stop_payment.place.json --unattended --input member_id=100482 --input account_kind=Checking --input check_number=1043 --input reason=lost_check",
+  "exit_code": 1
+}

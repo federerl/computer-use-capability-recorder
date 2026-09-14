@@ -1,0 +1,142 @@
+{
+  "id": "int-20260914T043729Z",
+  "run_id": "replay-20260914T043725Z",
+  "capability_id": "meridian.stop_payment.place",
+  "capability_version": "1.1.0",
+  "step_id": "s12",
+  "code": "CONFIRMATION_REQUIRED",
+  "detail": "click on s12 is marked irreversible and the capability requires a person to confirm it: Classified as irreversible by policy at record time. Places a fee-bearing hold that cannot be undone from this screen.",
+  "url": "http://127.0.0.1:5000/members/100482",
+  "inputs_digest": "97661e6cf56ee8ef",
+  "created_at": "2026-09-14T04:37:29.673+00:00",
+  "step_note": "Classified as irreversible by policy at record time. Places a fee-bearing hold that cannot be undone from this screen.",
+  "step_risk": "irreversible",
+  "screenshot": "evidence/replay/13-handover-operator-approves/intervention/s12.png",
+  "snapshot": "evidence/replay/13-handover-operator-approves/intervention/s12.txt",
+  "log_tail": [
+    {
+      "ts": "2026-09-14T04:37:26.405+00:00",
+      "elapsed_ms": 515,
+      "kind": "replay_started",
+      "capability": "meridian.stop_payment.place",
+      "version": "1.1.0",
+      "inputs_digest": "97661e6cf56ee8ef",
+      "approval_state": "approved"
+    },
+    {
+      "ts": "2026-09-14T04:37:26.732+00:00",
+      "elapsed_ms": 844,
+      "kind": "step",
+      "step_id": "s1",
+      "action": "navigate",
+      "strategy": "",
+      "waited": true,
+      "url": "http://127.0.0.1:5000/login"
+    },
+    {
+      "ts": "2026-09-14T04:37:27.028+00:00",
+      "elapsed_ms": 1140,
+      "kind": "step",
+      "step_id": "s2",
+      "action": "fill",
+      "strategy": "role_name",
+      "waited": true,
+      "url": "http://127.0.0.1:5000/login"
+    },
+    {
+      "ts": "2026-09-14T04:37:27.323+00:00",
+      "elapsed_ms": 1437,
+      "kind": "step",
+      "step_id": "s3",
+      "action": "fill",
+      "strategy": "role_name",
+      "waited": true,
+      "url": "http://127.0.0.1:5000/login"
+    },
+    {
+      "ts": "2026-09-14T04:37:27.526+00:00",
+      "elapsed_ms": 1640,
+      "kind": "step",
+      "step_id": "s4",
+      "action": "click",
+      "strategy": "role_name",
+      "waited": true,
+      "url": "http://127.0.0.1:5000/members"
+    },
+    {
+      "ts": "2026-09-14T04:37:27.797+00:00",
+      "elapsed_ms": 1906,
+      "kind": "step",
+      "step_id": "s5",
+      "action": "fill",
+      "strategy": "role_name",
+      "waited": true,
+      "url": "http://127.0.0.1:5000/members"
+    },
+    {
+      "ts": "2026-09-14T04:37:28.094+00:00",
+      "elapsed_ms": 2203,
+      "kind": "step",
+      "step_id": "s6",
+      "action": "click",
+      "strategy": "role_name",
+      "waited": true,
+      "url": "http://127.0.0.1:5000/members?f3=100482"
+    },
+    {
+      "ts": "2026-09-14T04:37:28.419+00:00",
+      "elapsed_ms": 2531,
+      "kind": "step",
+      "step_id": "s7",
+      "action": "click",
+      "strategy": "role_name",
+      "waited": true,
+      "url": "http://127.0.0.1:5000/members/100482"
+    },
+    {
+      "ts": "2026-09-14T04:37:28.773+00:00",
+      "elapsed_ms": 2890,
+      "kind": "step",
+      "step_id": "s8",
+      "action": "click",
+      "strategy": "role_name",
+      "waited": true,
+      "url": "http://127.0.0.1:5000/members/100482"
+    },
+    {
+      "ts": "2026-09-14T04:37:29.073+00:00",
+      "elapsed_ms": 3187,
+      "kind": "step",
+      "step_id": "s9",
+      "action": "click",
+      "strategy": "scoped_role",
+      "waited": true,
+      "url": "http://127.0.0.1:5000/members/100482"
+    },
+    {
+      "ts": "2026-09-14T04:37:29.360+00:00",
+      "elapsed_ms": 3469,
+      "kind": "step",
+      "step_id": "s10",
+      "action": "fill",
+      "strategy": "scoped_role",
+      "waited": true,
+      "url": "http://127.0.0.1:5000/members/100482"
+    },
+    {
+      "ts": "2026-09-14T04:37:29.655+00:00",
+      "elapsed_ms": 3765,
+      "kind": "step",
+      "step_id": "s11",
+      "action": "select",
+      "strategy": "scoped_role",
+      "waited": true,
+      "url": "http://127.0.0.1:5000/members/100482"
+    }
+  ],
+  "options": [
+    "resume --approve    automation performs the step",
+    "resume --completed  the step was done by hand; automation carries on after it",
+    "abort               end the run here"
+  ]
+}

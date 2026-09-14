@@ -1,0 +1,7 @@
+{
+  "name": "04-outcome-check-already-cleared",
+  "demonstrates": "A legitimate answer: the check has cleared and cannot be stopped.",
+  "fault_injected": null,
+  "command": "src.cli replay --artifact capabilities/meridian.stop_payment.place.json --unattended --input member_id=100482 --input account_kind=Checking --input check_number=1009 --input reason=lost_check",
+  "exit_code": 3
+}

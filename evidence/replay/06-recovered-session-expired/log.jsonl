@@ -1,0 +1,22 @@
+{"ts": "2026-09-14T04:36:23.942+00:00", "elapsed_ms": 547, "kind": "replay_started", "capability": "meridian.stop_payment.place", "version": "1.1.0", "inputs_digest": "97661e6cf56ee8ef", "approval_state": "approved"}
+{"ts": "2026-09-14T04:36:24.254+00:00", "elapsed_ms": 859, "kind": "step", "step_id": "s1", "action": "navigate", "strategy": "", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:36:24.537+00:00", "elapsed_ms": 1141, "kind": "step", "step_id": "s2", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:36:24.818+00:00", "elapsed_ms": 1422, "kind": "step", "step_id": "s3", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:36:33.072+00:00", "elapsed_ms": 9672, "kind": "step", "step_id": "s4", "action": "click", "strategy": "role_name", "waited": false, "url": "http://127.0.0.1:5000/members"}
+{"ts": "2026-09-14T04:36:33.078+00:00", "elapsed_ms": 9672, "kind": "condition_matched", "code": "SESSION_EXPIRED", "klass": "recoverable", "step": "s4", "detector": "text_present 'Your session has expired' in frame any"}
+{"ts": "2026-09-14T04:36:33.243+00:00", "elapsed_ms": 9844, "kind": "step", "step_id": "r2", "action": "navigate", "strategy": "", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:36:33.243+00:00", "elapsed_ms": 9844, "kind": "recovered", "code": "SESSION_EXPIRED", "step": "s4", "attempt": 1, "then": "restart_flow"}
+{"ts": "2026-09-14T04:36:33.510+00:00", "elapsed_ms": 10109, "kind": "step", "step_id": "s1", "action": "navigate", "strategy": "", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:36:33.798+00:00", "elapsed_ms": 10391, "kind": "step", "step_id": "s2", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:36:34.091+00:00", "elapsed_ms": 10688, "kind": "step", "step_id": "s3", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:36:34.294+00:00", "elapsed_ms": 10891, "kind": "step", "step_id": "s4", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members"}
+{"ts": "2026-09-14T04:36:34.575+00:00", "elapsed_ms": 11172, "kind": "step", "step_id": "s5", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members"}
+{"ts": "2026-09-14T04:36:34.887+00:00", "elapsed_ms": 11484, "kind": "step", "step_id": "s6", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members?f3=100482"}
+{"ts": "2026-09-14T04:36:35.232+00:00", "elapsed_ms": 11829, "kind": "step", "step_id": "s7", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members/100482"}
+{"ts": "2026-09-14T04:36:35.566+00:00", "elapsed_ms": 12172, "kind": "step", "step_id": "s8", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members/100482"}
+{"ts": "2026-09-14T04:36:35.879+00:00", "elapsed_ms": 12484, "kind": "step", "step_id": "s9", "action": "click", "strategy": "scoped_role", "waited": true, "url": "http://127.0.0.1:5000/members/100482"}
+{"ts": "2026-09-14T04:36:36.167+00:00", "elapsed_ms": 12766, "kind": "step", "step_id": "s10", "action": "fill", "strategy": "scoped_role", "waited": true, "url": "http://127.0.0.1:5000/members/100482"}
+{"ts": "2026-09-14T04:36:36.464+00:00", "elapsed_ms": 13063, "kind": "step", "step_id": "s11", "action": "select", "strategy": "scoped_role", "waited": true, "url": "http://127.0.0.1:5000/members/100482"}
+{"ts": "2026-09-14T04:36:36.765+00:00", "elapsed_ms": 13359, "kind": "step", "step_id": "s12", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members/100482"}
+{"ts": "2026-09-14T04:36:36.823+00:00", "elapsed_ms": 13422, "kind": "checkpoint_passed", "step": "s12", "assertions": 5}
+{"ts": "2026-09-14T04:36:36.872+00:00", "elapsed_ms": 13469, "kind": "replay_finished", "status": "success", "outputs": {"confirmation_number": "SP-98744383", "stop_payment_fee": "32.00", "masked_account_number": "****4821", "check_number": "1043", "reason": "lost_check", "placed_at": "2026-09-14T04:36:36+00:00"}, "outcome": null, "error": null, "llm_calls": 0}

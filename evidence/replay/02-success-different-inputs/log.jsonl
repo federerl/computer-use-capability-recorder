@@ -1,0 +1,15 @@
+{"ts": "2026-09-14T04:35:44.417+00:00", "elapsed_ms": 516, "kind": "replay_started", "capability": "meridian.stop_payment.place", "version": "1.1.0", "inputs_digest": "4ff246c46ccca913", "approval_state": "approved"}
+{"ts": "2026-09-14T04:35:44.742+00:00", "elapsed_ms": 844, "kind": "step", "step_id": "s1", "action": "navigate", "strategy": "", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:35:45.045+00:00", "elapsed_ms": 1141, "kind": "step", "step_id": "s2", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:35:45.313+00:00", "elapsed_ms": 1407, "kind": "step", "step_id": "s3", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:35:45.533+00:00", "elapsed_ms": 1625, "kind": "step", "step_id": "s4", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members"}
+{"ts": "2026-09-14T04:35:45.800+00:00", "elapsed_ms": 1907, "kind": "step", "step_id": "s5", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members"}
+{"ts": "2026-09-14T04:35:46.099+00:00", "elapsed_ms": 2204, "kind": "step", "step_id": "s6", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members?f3=100517"}
+{"ts": "2026-09-14T04:35:46.426+00:00", "elapsed_ms": 2532, "kind": "step", "step_id": "s7", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members/100517"}
+{"ts": "2026-09-14T04:35:46.793+00:00", "elapsed_ms": 2891, "kind": "step", "step_id": "s8", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members/100517"}
+{"ts": "2026-09-14T04:35:47.111+00:00", "elapsed_ms": 3204, "kind": "step", "step_id": "s9", "action": "click", "strategy": "scoped_role", "waited": true, "url": "http://127.0.0.1:5000/members/100517"}
+{"ts": "2026-09-14T04:35:47.388+00:00", "elapsed_ms": 3484, "kind": "step", "step_id": "s10", "action": "fill", "strategy": "scoped_role", "waited": true, "url": "http://127.0.0.1:5000/members/100517"}
+{"ts": "2026-09-14T04:35:47.673+00:00", "elapsed_ms": 3766, "kind": "step", "step_id": "s11", "action": "select", "strategy": "scoped_role", "waited": true, "url": "http://127.0.0.1:5000/members/100517"}
+{"ts": "2026-09-14T04:35:48.026+00:00", "elapsed_ms": 4125, "kind": "step", "step_id": "s12", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members/100517"}
+{"ts": "2026-09-14T04:35:48.084+00:00", "elapsed_ms": 4188, "kind": "checkpoint_passed", "step": "s12", "assertions": 5}
+{"ts": "2026-09-14T04:35:48.137+00:00", "elapsed_ms": 4234, "kind": "replay_finished", "status": "success", "outputs": {"confirmation_number": "SP-71596105", "stop_payment_fee": "32.00", "masked_account_number": "****7715", "check_number": "2210", "reason": "stolen_check", "placed_at": "2026-09-14T04:35:47+00:00"}, "outcome": null, "error": null, "llm_calls": 0}

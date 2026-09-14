@@ -1,0 +1,2 @@
+run replay-20260914T043724Z: meridian.stop_payment.place@1.1.0 (approved)  policy unattended
+input rejected: 'member_id' must match ^[0-9]{6}$ , got '12'
