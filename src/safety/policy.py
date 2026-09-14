@@ -108,6 +108,13 @@ class RedactionPolicy(Strict):
 class Policy(Strict):
     name: str = "default"
     description: str = ""
+    confirmations: Literal["require", "permit"] = "require"
+    """What a step the capability marks as needing confirmation means here.
+
+    `require` asks a person. `permit` is for a capability reviewed and approved
+    to run alone - the profile grants that once, rather than every invocation
+    passing a flag that quietly overrides the recording.
+    """
     allowlist: Allowlist = Field(default_factory=Allowlist)
     action_types: ActionTypes = Field(default_factory=ActionTypes)
     risk_rules: list[RiskRule] = Field(default_factory=list)

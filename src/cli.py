@@ -143,7 +143,11 @@ def replay(args: argparse.Namespace) -> int:
         print("Pass --allow-draft to run it anyway.", file=sys.stderr)
         return EXIT_USAGE
 
-    policy = Policy.load(args.policy)
+    # The profile is the single knob. `--unattended` selects one rather than
+    # overriding whichever profile happens to be loaded.
+    policy = Policy.load(
+        args.policy or ("policy/unattended.yaml" if args.unattended
+                        else "policy/attended.yaml"))
     run_id = new_run_id("replay")
     log = RunLog(args.evidence_root, run_id, redactor_for(policy))
 
@@ -152,14 +156,27 @@ def replay(args: argparse.Namespace) -> int:
     print(f"run {run_id}: {capability.id}@{capability.version} "
           f"({capability.approval_state})  policy {policy.name}")
 
+    lease = supervisor = None
+    if args.attended:
+        from src.escalation.control import ControlLease
+        from src.escalation.supervisor import HumanSupervisor
+
+        lease = ControlLease(log.dir / "control.json", run_id=run_id)
+        supervisor = HumanSupervisor(lease, log, timeout_s=args.handoff_timeout)
+        print("  attended: a run that cannot continue alone will wait for "
+              "`src.cli operator`")
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=args.headless)
         page = browser.new_page()
         try:
+            surface = guarded(page, policy)
+            surface.lease = lease
             engine = ReplayEngine(
-                guarded(page, policy), capability, log,
+                surface, capability, log,
                 runtime={"BASE_URL": base_url},
-                auto_confirm=args.unattended,
+                auto_confirm=policy.confirmations == "permit",
+                supervisor=supervisor,
             )
             result = engine.run(inputs)
         except InputError as exc:
@@ -182,6 +199,13 @@ def replay(args: argparse.Namespace) -> int:
             print(f"  recovered {r.code} at {r.step_id} "
                   f"(attempt {r.attempt}, {r.then})" if r.resolved
                   else f"  unrecovered {r.code} at {r.step_id}")
+    if result.control.get("human_intervened"):
+        c = result.control
+        print(f"  handover {c['intervention_id']} -> {c['verdict']}"
+              + (f" by {c['operator']}" if c.get("operator") else ""))
+        print(f"           {c['human_action_count']} recorded operator action(s)")
+        if c.get("note"):
+            print(f"           note: {c['note']}")
     if result.error:
         e = result.error
         print(f"  {e.code} at step {e.step_id} ({e.action})")
@@ -194,6 +218,82 @@ def replay(args: argparse.Namespace) -> int:
 
     print(f"\nevidence -> {log.dir}")
     return result.exit_code
+
+
+def operator(args: argparse.Namespace) -> int:
+    """The operator surface.
+
+    A command line rather than a console, deliberately and documented: the
+    handoff mechanism is what matters, and the person works the live browser
+    window the automation was already using. This just moves the lease.
+    """
+    from src.escalation.control import ControlLease, ControlState, InvalidTransition
+    from src.escalation.intervention import Intervention
+
+    root = Path(args.evidence_root)
+
+    def runs():
+        for control in sorted(root.glob("*/control.json")):
+            yield control.parent, ControlLease(control).read()
+
+    if args.operator_command == "list":
+        found = False
+        for directory, lease in runs():
+            if args.all or lease.state in (ControlState.HANDOFF_REQUESTED.value,
+                                           ControlState.HUMAN.value):
+                found = True
+                print(f"{directory.name:<34} {lease.state:<18} "
+                      f"{lease.reason or '-':<28} step {lease.step_id or '-'}")
+        if not found:
+            print("nothing waiting on a person." if not args.all else "no runs.")
+        return EXIT_OK
+
+    directory = root / args.run_id
+    if not directory.exists():
+        print(f"no run {args.run_id!r} under {root}", file=sys.stderr)
+        return EXIT_USAGE
+    lease = ControlLease(directory / "control.json")
+
+    operator_name = getattr(args, "operator", "operator")
+
+    if args.operator_command == "show":
+        intervention = Intervention.read(directory)
+        print(intervention.describe() if intervention else "no intervention recorded.")
+        current = lease.read()
+        print(f"\n  control     {current.state} (held by {current.holder}, "
+              f"seq {current.seq})")
+        return EXIT_OK
+
+    try:
+        if args.operator_command == "take":
+            state = lease.read()
+            if state.control is ControlState.HANDOFF_REQUESTED:
+                lease.transition(ControlState.HUMAN, holder="human",
+                                 operator=operator_name)
+            print(f"control is with {lease.read().holder}. The browser window is "
+                  f"live; do what you need to, then resume.")
+            return EXIT_OK
+
+        if args.operator_command == "resume":
+            mode = "completed" if args.completed else "approve"
+            lease.transition(ControlState.RESUME_REQUESTED, holder="human",
+                             operator=operator_name, resume_mode=mode,
+                             note=args.note)
+            print(f"handed back as {mode!r}."
+                  + ("" if mode == "approve" else
+                     " automation will not repeat the step."))
+            return EXIT_OK
+
+        if args.operator_command == "abort":
+            lease.transition(ControlState.ABORTED, holder="human",
+                             operator=operator_name, note=args.note)
+            print("run aborted.")
+            return EXIT_OK
+    except InvalidTransition as exc:
+        print(f"refused: {exc}", file=sys.stderr)
+        return EXIT_USAGE
+
+    return EXIT_USAGE
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -218,13 +318,51 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--inputs", default="{}", help="JSON object of input values")
     r.add_argument("--base-url", default="http://127.0.0.1:5000")
     r.add_argument("--evidence-root", default="evidence/replay")
-    r.add_argument("--policy", default="policy/attended.yaml")
+    r.add_argument("--policy", default=None,
+                   help="defaults to policy/attended.yaml, or "
+                        "policy/unattended.yaml with --unattended")
     r.add_argument("--unattended", action="store_true",
-                   help="perform steps the capability marks as needing "
-                        "confirmation, without one")
+                   help="use the unattended profile, which permits steps the "
+                        "capability marks as needing confirmation")
     r.add_argument("--allow-draft", action="store_true")
     r.add_argument("--headless", action="store_true")
+    r.add_argument("--attended", action="store_true",
+                   help="pause and hand the live session to an operator when the "
+                        "run cannot safely continue on its own")
+    r.add_argument("--handoff-timeout", type=float, default=900)
     r.set_defaults(func=replay)
+
+    o = sub.add_parser("operator", help="take and hand back control of a live run")
+    o.add_argument("--evidence-root", default="evidence/replay")
+    osub = o.add_subparsers(dest="operator_command", required=True)
+
+    def who(parser):
+        parser.add_argument("--operator", default=os.environ.get("USERNAME", "operator"),
+                            help="who is taking responsibility for this decision")
+        return parser
+
+    ol = osub.add_parser("list", help="runs waiting on a person")
+    ol.add_argument("--all", action="store_true")
+
+    osh = osub.add_parser("show", help="why a run stopped, and what it looked like")
+    osh.add_argument("run_id")
+
+    ot = who(osub.add_parser("take", help="take control of the live session"))
+    ot.add_argument("run_id")
+
+    ores = who(osub.add_parser("resume", help="hand control back"))
+    ores.add_argument("run_id")
+    ores.add_argument("--completed", action="store_true",
+                      help="the step was done by hand; automation must not repeat it")
+    ores.add_argument("--approve", action="store_true",
+                      help="automation performs the step (the default)")
+    ores.add_argument("--note", default="")
+
+    oa = who(osub.add_parser("abort", help="end the run"))
+    oa.add_argument("run_id")
+    oa.add_argument("--note", default="")
+
+    o.set_defaults(func=operator)
 
     return parser
 
