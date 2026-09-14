@@ -1,0 +1,30 @@
+frame:main
+  text 'Meridian CU - Back Office <<secret:operator_user>>'
+  heading 'Member 100482'
+  paragraph
+    link 'Back to search'  [e1]
+  iframe
+frame:detail
+  link 'Profile'  [e2]
+  link 'Accounts'  [e3]
+  heading 'Place Stop Payment'
+  paragraph = 'BARNES, ROSALIND | Checking ****4821'
+  table
+    row 'Check Number 1043'
+      cell 'Check Number'  [e4]
+      cell '1043'  [e5]
+        textbox = '1043'  [e6]
+    row 'Reason Lost check'
+      cell 'Reason'  [e7]
+      cell 'Lost check'  [e8]
+        combobox  [e9]
+          option '-- select --'  [e10]
+          option 'Lost check'  [e11]
+          option 'Stolen check'  [e12]
+          option 'Dispute'  [e13]
+          option 'Other'  [e14]
+    row 'Submit Stop Payment'
+      cell  [e15]
+      cell 'Submit Stop Payment'  [e16]
+        button 'Submit Stop Payment'  [e17]
+  paragraph = 'A stop payment is irreversible once submitted and assesses a fee.'

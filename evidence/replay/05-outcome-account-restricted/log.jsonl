@@ -1,0 +1,11 @@
+{"ts": "2026-09-14T04:36:12.280+00:00", "elapsed_ms": 561, "kind": "replay_started", "capability": "meridian.stop_payment.place", "version": "1.1.0", "inputs_digest": "a30a81ae1de15c3c", "approval_state": "approved"}
+{"ts": "2026-09-14T04:36:12.605+00:00", "elapsed_ms": 890, "kind": "step", "step_id": "s1", "action": "navigate", "strategy": "", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:36:12.883+00:00", "elapsed_ms": 1171, "kind": "step", "step_id": "s2", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:36:13.151+00:00", "elapsed_ms": 1436, "kind": "step", "step_id": "s3", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/login"}
+{"ts": "2026-09-14T04:36:13.373+00:00", "elapsed_ms": 1655, "kind": "step", "step_id": "s4", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members"}
+{"ts": "2026-09-14T04:36:13.666+00:00", "elapsed_ms": 1952, "kind": "step", "step_id": "s5", "action": "fill", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members"}
+{"ts": "2026-09-14T04:36:13.964+00:00", "elapsed_ms": 2250, "kind": "step", "step_id": "s6", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members?f3=100633"}
+{"ts": "2026-09-14T04:36:14.290+00:00", "elapsed_ms": 2577, "kind": "step", "step_id": "s7", "action": "click", "strategy": "role_name", "waited": true, "url": "http://127.0.0.1:5000/members/100633"}
+{"ts": "2026-09-14T04:36:22.657+00:00", "elapsed_ms": 10936, "kind": "step", "step_id": "s8", "action": "click", "strategy": "role_name", "waited": false, "url": "http://127.0.0.1:5000/members/100633"}
+{"ts": "2026-09-14T04:36:22.660+00:00", "elapsed_ms": 10952, "kind": "condition_matched", "code": "ACCOUNT_RESTRICTED", "klass": "business_outcome", "step": "s8", "detector": "text_present 'cannot service restricted accounts' in frame detail"}
+{"ts": "2026-09-14T04:36:22.660+00:00", "elapsed_ms": 10952, "kind": "replay_finished", "status": "business_outcome", "outputs": null, "outcome": {"code": "ACCOUNT_RESTRICTED", "outcome": "account_restricted", "message": "The signed-on operator may not service this member.", "step_id": "s8"}, "error": null, "llm_calls": 0}

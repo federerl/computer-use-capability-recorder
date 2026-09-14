@@ -317,3 +317,50 @@ def test_control_moves_through_the_file_not_the_process(attended):
 
     assert result.status == "success", result.error
     assert result.control["operator"] == "remote"
+
+
+def test_the_lease_survives_a_reader_and_a_writer_at_once(tmp_path):
+    """The operator is a separate process, so reads and writes overlap.
+
+    On Windows a file cannot be replaced while anything has it open, so without
+    retries on both sides a handover fails intermittently - the worst way for it
+    to fail, because it passes every time you look at it.
+    """
+    import itertools
+    import threading
+    import time
+
+    lease = ControlLease(tmp_path / "control.json", run_id="race")
+    errors: list[tuple[str, str]] = []
+    stop = threading.Event()
+    cycle = itertools.cycle([
+        (ControlState.HANDOFF_REQUESTED, "automation"),
+        (ControlState.HUMAN, "human"),
+        (ControlState.RESUME_REQUESTED, "human"),
+        (ControlState.AUTOMATION, "automation"),
+    ])
+
+    def operator_polling():
+        while not stop.is_set():
+            try:
+                lease.read()
+            except Exception as exc:
+                errors.append(("read", f"{type(exc).__name__}: {exc}"))
+                return
+            time.sleep(0.01)
+
+    watcher = threading.Thread(target=operator_polling, daemon=True)
+    watcher.start()
+    try:
+        for _ in range(120):
+            try:
+                lease.transition(*next(cycle))
+            except Exception as exc:
+                errors.append(("write", f"{type(exc).__name__}: {exc}"))
+                break
+    finally:
+        stop.set()
+        watcher.join(timeout=2)
+
+    assert not errors, errors[:3]
+    assert lease.read().seq == 120

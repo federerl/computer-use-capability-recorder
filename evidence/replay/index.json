@@ -1,0 +1,93 @@
+[
+  {
+    "name": "01-success-recorded-inputs",
+    "status": "success",
+    "exit_code": 0,
+    "demonstrates": "The inputs the capability was recorded with.",
+    "fault": null
+  },
+  {
+    "name": "02-success-different-inputs",
+    "status": "success",
+    "exit_code": 0,
+    "demonstrates": "A different member, account and reason through the same artifact.",
+    "fault": null
+  },
+  {
+    "name": "03-outcome-member-not-found",
+    "status": "business_outcome",
+    "exit_code": 3,
+    "demonstrates": "A legitimate answer: no such member. Not an error.",
+    "fault": null
+  },
+  {
+    "name": "04-outcome-check-already-cleared",
+    "status": "business_outcome",
+    "exit_code": 3,
+    "demonstrates": "A legitimate answer: the check has cleared and cannot be stopped.",
+    "fault": null
+  },
+  {
+    "name": "05-outcome-account-restricted",
+    "status": "business_outcome",
+    "exit_code": 3,
+    "demonstrates": "A legitimate answer: the operator may not service this member.",
+    "fault": null
+  },
+  {
+    "name": "06-recovered-session-expired",
+    "status": "success",
+    "exit_code": 0,
+    "demonstrates": "The session times out mid-flow; the run signs back in and restarts.",
+    "fault": "session_expired"
+  },
+  {
+    "name": "07-recovered-system-notice",
+    "status": "success",
+    "exit_code": 0,
+    "demonstrates": "An interstitial appears over the working pane and is dismissed.",
+    "fault": "system_notice"
+  },
+  {
+    "name": "08-failed-checkpoint",
+    "status": "failed",
+    "exit_code": 1,
+    "demonstrates": "The click works and the page settles, but it is not the confirmation screen. Without a checkpoint this would report success.",
+    "fault": "wrong_confirmation"
+  },
+  {
+    "name": "09-drift-tolerated-by-fallback",
+    "status": "success",
+    "exit_code": 0,
+    "demonstrates": "The submit control is renamed. Role and name no longer match; the recorded selector finds the same control.",
+    "fault": "relabel_submit"
+  },
+  {
+    "name": "10-unrecognised-state",
+    "status": "failed",
+    "exit_code": 1,
+    "demonstrates": "A blocking dialog no condition declares. Never treated as success.",
+    "fault": "security_challenge"
+  },
+  {
+    "name": "11-refused-confirmation-required",
+    "status": "failed",
+    "exit_code": 1,
+    "demonstrates": "Attended, with nobody available: the irreversible step is not taken.",
+    "fault": null
+  },
+  {
+    "name": "12-rejected-bad-input",
+    "status": "rejected",
+    "exit_code": 2,
+    "demonstrates": "Arguments that do not satisfy the contract, refused before the browser opens.",
+    "fault": null
+  },
+  {
+    "name": "13-handover-operator-approves",
+    "status": "success",
+    "exit_code": 0,
+    "demonstrates": "The run stops at the irreversible step and waits. A separate operator process takes the live session, approves, and hands it back; the run revalidates and completes.",
+    "fault": null
+  }
+]

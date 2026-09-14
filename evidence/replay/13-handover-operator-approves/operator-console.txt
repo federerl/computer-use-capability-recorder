@@ -1,0 +1,23 @@
+$ src.cli operator --evidence-root evidence\replay\.staging-13-handover-operator-approves list
+replay-20260914T043725Z            human              CONFIRMATION_REQUIRED        step s12
+
+$ src.cli operator --evidence-root evidence\replay\.staging-13-handover-operator-approves show replay-20260914T043725Z
+int-20260914T043729Z   CONFIRMATION_REQUIRED
+  capability  meridian.stop_payment.place@1.1.0
+  stopped at  s12  (irreversible)
+  why         click on s12 is marked irreversible and the capability requires a person to confirm it: Classified as irreversible by policy at record time. Places a fee-bearing hold that cannot be undone from this screen.
+  url         http://127.0.0.1:5000/members/100482
+  inputs      97661e6cf56ee8ef
+  note        Classified as irreversible by policy at record time. Places a fee-bearing hold that cannot be undone from this screen.
+  screenshot  evidence/replay/.staging-13-handover-operator-approves/replay-20260914T043725Z/intervention/s12.png
+  snapshot    evidence/replay/.staging-13-handover-operator-approves/replay-20260914T043725Z/intervention/s12.txt
+  options:
+    resume --approve    automation performs the step
+    resume --completed  the step was done by hand; automation carries on after it
+    abort               end the run here
+
+  control     human (held by human, seq 2)
+
+$ src.cli operator --evidence-root evidence\replay\.staging-13-handover-operator-approves resume replay-20260914T043725Z --approve --operator dana --note fee verified against the schedule
+handed back as 'approve'.
+

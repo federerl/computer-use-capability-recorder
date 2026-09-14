@@ -1,0 +1,7 @@
+{
+  "name": "13-handover-operator-approves",
+  "demonstrates": "The run stops at the irreversible step and waits. A separate operator process takes the live session, approves, and hands it back; the run revalidates and completes.",
+  "fault_injected": null,
+  "command": "src.cli replay --attended ...  +  src.cli operator resume --approve --operator dana --note fee verified against the schedule",
+  "exit_code": 0
+}

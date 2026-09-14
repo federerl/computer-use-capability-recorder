@@ -63,7 +63,7 @@ def test_replay_succeeds_on_the_recorded_inputs(engine_for):
     assert result.status == "success", result.error
     assert result.outputs["confirmation_number"].startswith("SP-")
     assert result.outputs["masked_account_number"] == "****4821"
-    assert result.outputs["check_number_confirmed"] == "1043"
+    assert result.outputs["check_number"] == "1043"
     assert result.exit_code == 0
 
 
@@ -75,7 +75,7 @@ def test_replay_generalises_to_different_inputs(engine_for):
 
     assert result.status == "success", result.error
     assert result.outputs["masked_account_number"] == "****7715"
-    assert result.outputs["check_number_confirmed"] == "2210"
+    assert result.outputs["check_number"] == "2210"
 
 
 def test_replay_consults_no_model(engine_for):
@@ -276,7 +276,12 @@ def test_secrets_never_reach_the_replay_evidence(engine_for):
 
 def test_the_approved_capability_records_what_review_changed(capability):
     assert capability.approval_state == "approved"
-    assert capability.version == "1.1.0"
+
+    # Review produced a new version rather than editing the discovered one in
+    # place, so the two can be compared.
+    discovered = store.load("evidence/artifacts/meridian.stop_payment.place.json")
+    assert discovered.approval_state == "draft"
+    assert capability.version != discovered.version
     assert not capability.review, "an approved capability has nothing outstanding"
     assert len(capability.provenance.human_edits) >= 4
     assert capability.provenance.discovered_by.model == "claude-opus-5"
@@ -287,3 +292,45 @@ def test_positional_resolution_stayed_confined_to_one_step(capability):
                   if s.target and not s.target.disambiguation.expect_unique]
     assert positional == ["s7"]
     assert capability.step("s7").note
+
+
+def test_a_closed_browser_is_reported_as_such_not_as_a_missing_control(engine_for):
+    """Losing the session and failing to find a control look identical at the
+    point of failure and mean completely different things. Reporting the former
+    as the latter sends the reader looking at a page that was never there."""
+    from src.surface.base import SessionLost
+
+    engine, _ = engine_for()
+    engine.surface.page.close()
+
+    with pytest.raises(SessionLost, match="browser session is gone"):
+        engine.surface.resolve(
+            capability_target := store.load(ARTIFACT).step("s5").target)
+
+    result = engine.run(RECORDED)
+    assert result.status == "failed"
+    assert result.error.code == "SESSION_LOST"
+    assert "window was closed" in result.error.observed
+    assert not result.error.locator_attempts, \
+        "listing strategies tried against a page that does not exist is noise"
+
+
+def test_recovery_does_not_repeat_the_steps_the_restart_will_run(engine_for):
+    """The flow opens by signing on, so a recovery that signs on itself and then
+    restarts makes the same four steps run twice. Visible to anyone watching,
+    invisible in a passing test - so it gets one."""
+    engine, _ = engine_for()
+    arm("session_expired")
+    result = engine.run(RECORDED)
+
+    assert result.status == "success", result.error
+
+    # Twice is correct: once before the session died, once after the restart.
+    # Three times was the defect - the recovery signed on as well.
+    sign_ons = [s for s in result.steps if s.step_id == "s4"]
+    assert len(sign_ons) == 2
+
+    recovery_steps = [s for s in result.steps if s.step_id.startswith("r")]
+    assert recovery_steps, "the recovery should still have had to do something"
+    assert {s.action for s in recovery_steps} == {"navigate"}, \
+        "a recovery should only clear the way; restarting runs the flow"

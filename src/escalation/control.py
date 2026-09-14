@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -102,19 +103,39 @@ class ControlLease:
         for attempt in range(attempts):
             try:
                 return Lease(**json.loads(self.path.read_text(encoding="utf-8")))
-            except (json.JSONDecodeError, FileNotFoundError, TypeError) as exc:
+            except (json.JSONDecodeError, TypeError, OSError) as exc:
                 last = exc
                 time.sleep(0.02 * (attempt + 1))
         raise RuntimeError(f"control file at {self.path} is unreadable: {last}")
 
-    def _write(self, lease: Lease) -> Lease:
+    def _write(self, lease: Lease, attempts: int = 8) -> Lease:
         """Replace the file rather than rewriting it in place, so a reader sees
-        either the old lease or the new one and never half of either."""
+        either the old lease or the new one and never half of either.
+
+        On Windows a replace fails outright while any process has the target
+        open, so the operator reading the lease is enough to make a handover
+        fail - intermittently, which is the worst way for it to fail. Both sides
+        retry briefly. The alternative, a lock file, adds a second piece of
+        shared state that can be left behind by a process that died.
+        """
         payload = json.dumps(asdict(lease), indent=2) + "\n"
-        temporary = self.path.with_suffix(f".{os.getpid()}.tmp")
+        temporary = self.path.with_suffix(f".{os.getpid()}.{threading.get_ident()}.tmp")
         temporary.write_text(payload, encoding="utf-8")
-        os.replace(temporary, self.path)
-        return lease
+
+        last: Exception | None = None
+        for attempt in range(attempts):
+            try:
+                os.replace(temporary, self.path)
+                return lease
+            except OSError as exc:
+                last = exc
+                time.sleep(0.02 * (attempt + 1))
+
+        temporary.unlink(missing_ok=True)
+        raise RuntimeError(
+            f"could not update the control file at {self.path} after {attempts} "
+            f"attempts: {last}"
+        )
 
     # --------------------------------------------------------- transitions
 

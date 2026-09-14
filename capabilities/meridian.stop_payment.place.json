@@ -3,7 +3,7 @@
   "id": "meridian.stop_payment.place",
   "version": "1.1.0",
   "title": "Place stop payment on a check",
-  "description": "Signs in to the Meridian CU back office, looks up a member by member number, opens the specified account type, and submits a stop payment for a given check number and reason. Returns the confirmation details.",
+  "description": "Signs in to the Meridian CU back office, looks up a member by member number, opens the specified account type, and places a stop payment on a given check number with a selected reason. Returns the confirmation details.",
   "approval_state": "approved",
   "surface": {
     "kind": "web",
@@ -75,23 +75,30 @@
       "type": "string",
       "required": true,
       "pattern": "^\\d+\\.\\d{2}$",
-      "description": "Fee charged for the stop payment.",
+      "description": "Fee charged for placing the stop payment.",
       "sensitivity": "none"
     },
     {
       "name": "masked_account_number",
       "type": "string",
       "required": true,
-      "pattern": "^\\*{4}\\d{4}$",
-      "description": "Masked account number the stop payment was placed on.",
+      "pattern": "^\\*+\\d{4}$",
+      "description": "Masked number of the account the stop payment was placed on.",
       "sensitivity": "account"
     },
     {
-      "name": "check_number_confirmed",
+      "name": "check_number",
       "type": "string",
       "required": true,
       "pattern": "^\\d+$",
       "description": "Check number the stop payment applies to.",
+      "sensitivity": "none"
+    },
+    {
+      "name": "reason",
+      "type": "string",
+      "required": true,
+      "description": "Reason code recorded for the stop payment.",
       "sensitivity": "none"
     },
     {
@@ -637,7 +644,7 @@
       "policy": {
         "requires": "confirmation"
       },
-      "note": "Places a fee-bearing hold that cannot be undone from this screen."
+      "note": "Classified as irreversible by policy at record time. Places a fee-bearing hold that cannot be undone from this screen."
     }
   ],
   "checkpoints": [
@@ -664,11 +671,11 @@
         {
           "kind": "matches",
           "extract": "masked_account_number",
-          "pattern": "^\\*{4}\\d{4}$"
+          "pattern": "^\\*+\\d{4}$"
         },
         {
           "kind": "matches",
-          "extract": "check_number_confirmed",
+          "extract": "check_number",
           "pattern": "^\\d+$"
         }
       ]
@@ -757,7 +764,7 @@
       "transform": "trim"
     },
     {
-      "name": "check_number_confirmed",
+      "name": "check_number",
       "target": {
         "scope": {
           "frame": "detail"
@@ -772,6 +779,33 @@
           {
             "by": "css",
             "value": "body > div:nth-of-type(2) > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2)",
+            "note": "recorded selector; brittle"
+          }
+        ],
+        "disambiguation": {
+          "expect_unique": false,
+          "nth": 1
+        }
+      },
+      "take": "text",
+      "transform": "trim"
+    },
+    {
+      "name": "reason",
+      "target": {
+        "scope": {
+          "frame": "detail"
+        },
+        "primary": {
+          "by": "scoped_role",
+          "scope_role": "row",
+          "scope_anchor": "Reason",
+          "role": "cell"
+        },
+        "fallbacks": [
+          {
+            "by": "css",
+            "value": "body > div:nth-of-type(2) > table > tbody > tr:nth-of-type(4) > td:nth-of-type(2)",
             "note": "recorded selector; brittle"
           }
         ],
@@ -823,7 +857,10 @@
         }
       },
       "verified": true,
-      "applies_to": "any",
+      "applies_to": [
+        "s6",
+        "s7"
+      ],
       "message": "No member exists with the supplied member number.",
       "outcome": "member_not_found",
       "max_attempts": 1,
@@ -956,94 +993,9 @@
             "action": "navigate",
             "url": "${BASE_URL}/login",
             "wait": {
-              "until": "settled",
-              "scope": {
-                "frame": "main"
-              },
-              "timeout_ms": 8000
-            },
-            "risk": "safe",
-            "note": ""
-          },
-          {
-            "id": "r3",
-            "action": "fill",
-            "target": {
-              "scope": {
-                "frame": "main"
-              },
-              "primary": {
-                "by": "role_name",
-                "role": "textbox",
-                "name": "Operator ID"
-              },
-              "fallbacks": [],
-              "disambiguation": {
-                "expect_unique": true
-              }
-            },
-            "value": {
-              "from_secret": "operator_user"
-            },
-            "wait": {
-              "until": "settled",
-              "scope": {
-                "frame": "main"
-              },
-              "timeout_ms": 8000
-            },
-            "risk": "safe",
-            "note": ""
-          },
-          {
-            "id": "r4",
-            "action": "fill",
-            "target": {
-              "scope": {
-                "frame": "main"
-              },
-              "primary": {
-                "by": "role_name",
-                "role": "textbox",
-                "name": "Password"
-              },
-              "fallbacks": [],
-              "disambiguation": {
-                "expect_unique": true
-              }
-            },
-            "value": {
-              "from_secret": "operator_password"
-            },
-            "wait": {
-              "until": "settled",
-              "scope": {
-                "frame": "main"
-              },
-              "timeout_ms": 8000
-            },
-            "risk": "safe",
-            "note": ""
-          },
-          {
-            "id": "r5",
-            "action": "click",
-            "target": {
-              "scope": {
-                "frame": "main"
-              },
-              "primary": {
-                "by": "role_name",
-                "role": "button",
-                "name": "Sign On"
-              },
-              "fallbacks": [],
-              "disambiguation": {
-                "expect_unique": true
-              }
-            },
-            "wait": {
-              "until": "settled",
+              "until": "role",
+              "role": "button",
+              "name": "Sign On",
               "scope": {
                 "frame": "main"
               },
@@ -1062,18 +1014,17 @@
   "provenance": {
     "discovered_by": {
       "model": "claude-opus-5",
-      "run_id": "disc-20260912T203547Z",
+      "run_id": "disc-20260914T042525Z",
       "steps_taken": 12
     },
-    "trace_ref": "evidence/discovery/disc-20260912T203547Z/log.jsonl",
-    "recorded_at": "2026-09-12T20:37:00.363003Z",
+    "trace_ref": "evidence/discovery/disc-20260914T042525Z/log.jsonl",
+    "recorded_at": "2026-09-14T04:26:35.205306Z",
     "human_edits": [
-      "s7: replaced a target anchored on this member's account number, and a wait on this member's number, with positional resolution and a wait on a control that is present for every member.",
+      "s7: the run chose the results row by this member's account number and waited on this member's number. Replaced with positional resolution - every row for a member opens the same record - and a wait on a control present for all.",
       "s8: replaced a wait on a heading carrying the member's name.",
-      "s12: reclassified from safe to irreversible and gated on confirmation. The run could not know the action places a fee-bearing hold; risk is a policy judgement.",
+      "s12: policy classified this irreversible at record time; confirmed, and the reason recorded. The run itself saw only a click that succeeded.",
       "masked_account_number: marked as account data for redaction.",
-      "MEMBER_NOT_FOUND: the run anticipated this state without reaching it and guessed the wording as 'No members found'. The screen reads 'No records match'. Corrected, and every condition checked against the real state.",
-      "Added three business outcomes and two recoverable conditions for states a successful run never reached."
+      "Added four business outcomes and two recoverable conditions. A successful run never reaches these states, so it could not have described them; each detector was checked against the real screen rather than guessed."
     ]
   },
   "review": []

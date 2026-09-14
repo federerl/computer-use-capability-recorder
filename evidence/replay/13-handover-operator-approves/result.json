@@ -1,0 +1,174 @@
+{
+  "status": "success",
+  "capability": {
+    "id": "meridian.stop_payment.place",
+    "version": "1.1.0"
+  },
+  "run_id": "replay-20260914T043725Z",
+  "inputs_digest": "97661e6cf56ee8ef",
+  "outputs": {
+    "confirmation_number": "SP-50259587",
+    "stop_payment_fee": "32.00",
+    "masked_account_number": "****4821",
+    "check_number": "1043",
+    "reason": "lost_check",
+    "placed_at": "2026-09-14T04:37:31+00:00"
+  },
+  "outcome": null,
+  "error": null,
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "navigate",
+      "ok": true,
+      "strategy": "",
+      "attempts": [],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 282
+    },
+    {
+      "step_id": "s2",
+      "action": "fill",
+      "ok": true,
+      "strategy": "role_name",
+      "attempts": [
+        "role_name({'role': 'textbox', 'name': 'Operator ID'}) -> 1 match(es)"
+      ],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 265
+    },
+    {
+      "step_id": "s3",
+      "action": "fill",
+      "ok": true,
+      "strategy": "role_name",
+      "attempts": [
+        "role_name({'role': 'textbox', 'name': 'Password'}) -> 1 match(es)"
+      ],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 280
+    },
+    {
+      "step_id": "s4",
+      "action": "click",
+      "ok": true,
+      "strategy": "role_name",
+      "attempts": [
+        "role_name({'role': 'button', 'name': 'Sign On'}) -> 1 match(es)"
+      ],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 202
+    },
+    {
+      "step_id": "s5",
+      "action": "fill",
+      "ok": true,
+      "strategy": "role_name",
+      "attempts": [
+        "role_name({'role': 'textbox', 'name': 'Member Number'}) -> 1 match(es)"
+      ],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 266
+    },
+    {
+      "step_id": "s6",
+      "action": "click",
+      "ok": true,
+      "strategy": "role_name",
+      "attempts": [
+        "role_name({'role': 'button', 'name': 'Search'}) -> 1 match(es)"
+      ],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 281
+    },
+    {
+      "step_id": "s7",
+      "action": "click",
+      "ok": true,
+      "strategy": "role_name",
+      "attempts": [
+        "role_name({'role': 'link', 'name': 'View'}) -> 2 match(es)"
+      ],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 297
+    },
+    {
+      "step_id": "s8",
+      "action": "click",
+      "ok": true,
+      "strategy": "role_name",
+      "attempts": [
+        "role_name({'role': 'link', 'name': 'Accounts'}) -> 1 match(es)"
+      ],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 327
+    },
+    {
+      "step_id": "s9",
+      "action": "click",
+      "ok": true,
+      "strategy": "scoped_role",
+      "attempts": [
+        "scoped_role({'scope_role': 'row', 'scope_anchor': 'Checking', 'role': 'link', 'name': 'Stop Pay'}) -> 1 match(es)"
+      ],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 280
+    },
+    {
+      "step_id": "s10",
+      "action": "fill",
+      "ok": true,
+      "strategy": "scoped_role",
+      "attempts": [
+        "scoped_role({'scope_role': 'row', 'scope_anchor': 'Check Number', 'role': 'textbox'}) -> 1 match(es)"
+      ],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 265
+    },
+    {
+      "step_id": "s11",
+      "action": "select",
+      "ok": true,
+      "strategy": "scoped_role",
+      "attempts": [
+        "scoped_role({'scope_role': 'row', 'scope_anchor': 'Reason', 'role': 'combobox'}) -> 1 match(es)"
+      ],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 280
+    },
+    {
+      "step_id": "s12",
+      "action": "click",
+      "ok": true,
+      "strategy": "role_name",
+      "attempts": [
+        "role_name({'role': 'button', 'name': 'Submit Stop Payment'}) -> 1 match(es)"
+      ],
+      "detail": "",
+      "code": "",
+      "elapsed_ms": 343
+    }
+  ],
+  "recoveries": [],
+  "control": {
+    "human_intervened": true,
+    "intervention_id": "int-20260914T043729Z",
+    "verdict": "approved",
+    "operator": "dana",
+    "note": "fee verified against the schedule",
+    "human_action_count": 0
+  },
+  "llm_calls": 0,
+  "elapsed_ms": 5907
+}

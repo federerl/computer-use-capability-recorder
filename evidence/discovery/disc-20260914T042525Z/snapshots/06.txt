@@ -13,14 +13,14 @@ frame:detail
       cell 'Member Number'  [e3]
       cell '100482'  [e4]
         textbox 'Member Number' = '100482'  [e5]
-    row 'SSN <<redacted:ssn>>'
+    row 'SSN <<redacted:policy>>'
       cell 'SSN'  [e6]
-      cell '<<redacted:ssn>>'  [e7]
-        textbox 'SSN' = '<<redacted:ssn>>'  [e8]
-    row 'Card on File <<redacted:card>>'
+      cell '<<redacted:policy>>'  [e7]
+        textbox 'SSN' = '<<redacted:policy>>'  [e8]
+    row 'Card on File <<redacted:policy>>'
       cell 'Card on File'  [e9]
-      cell '<<redacted:card>>'  [e10]
-        textbox 'Card Number' = '<<redacted:card>>'  [e11]
+      cell '<<redacted:policy>>'  [e10]
+        textbox 'Card Number' = '<<redacted:policy>>'  [e11]
     row 'Servicing Status Standard'
       cell 'Servicing Status'  [e12]
       cell 'Standard'  [e13]

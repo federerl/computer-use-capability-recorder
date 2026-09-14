@@ -28,7 +28,7 @@ from src.replay.result import (
 )
 from src.surface.base import (
     ActionBlocked, ClickAction, ConfirmationRequired, FillAction, NavigateAction,
-    PressAction, SelectAction, SurfaceError, TargetNotFound,
+    PressAction, SelectAction, SessionLost, SurfaceError, TargetNotFound,
 )
 
 MAX_CONDITION_LOOPS = 12
@@ -160,6 +160,7 @@ class ReplayEngine:
     def _execute(self):
         index = 0
         loops = 0
+        just_restarted = False
         steps = self.capability.steps
 
         while index < len(steps):
@@ -174,13 +175,22 @@ class ReplayEngine:
             # States that are not tied to a step - an interstitial, a timeout -
             # are checked before acting, because acting through one is how a
             # click lands somewhere unintended.
-            outcome = self._check_conditions(step, before=True)
+            #
+            # Except immediately after a restart. The state that caused it is
+            # still on screen - nothing has acted yet - so checking here would
+            # match the same condition again and exhaust its attempts. Restarting
+            # means the first step is what clears it, which is why a recovery
+            # should not have to repeat the flow's own opening steps to get out
+            # of the way.
+            outcome = None if just_restarted else self._check_conditions(step, before=True)
+            just_restarted = False
             if outcome is not None:
                 kind, value = outcome
                 if kind == "terminal":
                     return value
                 if kind == "restart":
                     index = 0
+                    just_restarted = True
                     continue
                 if kind == "retry":
                     continue
@@ -210,6 +220,7 @@ class ReplayEngine:
                     return value
                 if kind == "restart":
                     index = 0
+                    just_restarted = True
                     continue
                 if kind == "retry":
                     continue
@@ -281,6 +292,9 @@ class ReplayEngine:
         except ActionBlocked as exc:
             return StepReport(step_id=step.id, action=step.action, ok=False,
                               code="POLICY_VIOLATION", detail=str(exc))
+        except SessionLost as exc:
+            return StepReport(step_id=step.id, action=step.action, ok=False,
+                              code="SESSION_LOST", detail=str(exc))
         except SurfaceError as exc:
             return StepReport(step_id=step.id, action=step.action, ok=False,
                               code="STEP_FAILED",
@@ -519,6 +533,11 @@ class ReplayEngine:
         """Richer evidence, captured at the moment of failure rather than
         reconstructed from a log afterwards."""
         evidence: dict[str, str] = {}
+        try:
+            if self.surface.page.is_closed():
+                return {"note": "no session left to capture from"}
+        except Exception:
+            pass
         try:
             path = self.log.dir / "failure" / f"{step_id}.png"
             evidence["screenshot"] = self.log.relative(self.surface.screenshot(path))

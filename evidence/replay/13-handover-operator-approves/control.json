@@ -1,0 +1,12 @@
+{
+  "run_id": "replay-20260914T043725Z",
+  "state": "automation",
+  "holder": "automation",
+  "seq": 4,
+  "updated_at": "2026-09-14T04:37:31.820+00:00",
+  "operator": "dana",
+  "resume_mode": "",
+  "note": "fee verified against the schedule",
+  "reason": "CONFIRMATION_REQUIRED",
+  "step_id": "s12"
+}

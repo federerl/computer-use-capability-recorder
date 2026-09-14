@@ -1,0 +1,20 @@
+frame:main
+  text 'Meridian CU - Back Office <<secret:operator_user>>'
+  heading 'Member 100482'
+  paragraph
+    link 'Back to search'  [e1]
+  iframe
+frame:detail
+  text 'Security Verification'
+  dialog 'Security Verification Required'
+    heading 'Security Verification Required'
+    paragraph = 'Additional verification is required before servicing this account.'
+    table
+      row 'In what town was the member born?'
+        cell 'In what town was the member born?'  [e2]
+        cell  [e3]
+          textbox  [e4]
+      row 'Verify'
+        cell  [e5]
+        cell 'Verify'  [e6]
+          button 'Verify'  [e7]

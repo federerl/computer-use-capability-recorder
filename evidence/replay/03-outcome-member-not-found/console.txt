@@ -1,0 +1,7 @@
+run replay-20260914T043548Z: meridian.stop_payment.place@1.1.0 (approved)  policy unattended
+
+business_outcome  (1687 ms, 0 model calls)
+  outcome  member_not_found  (MEMBER_NOT_FOUND)
+           No member exists with the supplied member number.
+
+evidence -> evidence\replay\.staging-03-outcome-member-not-found\replay-20260914T043548Z

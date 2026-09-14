@@ -1,0 +1,7 @@
+{
+  "name": "05-outcome-account-restricted",
+  "demonstrates": "A legitimate answer: the operator may not service this member.",
+  "fault_injected": null,
+  "command": "src.cli replay --artifact capabilities/meridian.stop_payment.place.json --unattended --input member_id=100633 --input account_kind=Checking --input check_number=3001 --input reason=lost_check",
+  "exit_code": 3
+}

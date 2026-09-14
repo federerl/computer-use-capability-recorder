@@ -1,0 +1,15 @@
+run replay-20260914T043725Z: meridian.stop_payment.place@1.1.0 (approved)  policy attended
+  attended: a run that cannot continue alone will wait for `src.cli operator`
+
+success  (5907 ms, 0 model calls)
+  confirmation_number = 'SP-50259587'
+  stop_payment_fee = '32.00'
+  masked_account_number = '****4821'
+  check_number = '1043'
+  reason = 'lost_check'
+  placed_at = '2026-09-14T04:37:31+00:00'
+  handover int-20260914T043729Z -> approved by dana
+           0 recorded operator action(s)
+           note: fee verified against the schedule
+
+evidence -> evidence\replay\.staging-13-handover-operator-approves\replay-20260914T043725Z

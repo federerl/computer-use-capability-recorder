@@ -1,0 +1,7 @@
+{
+  "name": "11-refused-confirmation-required",
+  "demonstrates": "Attended, with nobody available: the irreversible step is not taken.",
+  "fault_injected": null,
+  "command": "src.cli replay --artifact capabilities/meridian.stop_payment.place.json --input member_id=100482 --input account_kind=Checking --input check_number=1043 --input reason=lost_check",
+  "exit_code": 1
+}
