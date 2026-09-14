@@ -83,7 +83,8 @@ def discover(args: argparse.Namespace) -> int:
     print(f"  evidence {log.dir}")
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=args.headless)
+        browser = p.chromium.launch(headless=args.headless,
+                                    slow_mo=args.slow_mo)
         page = browser.new_page()
         surface = guarded(page, policy)
         try:
@@ -128,11 +129,49 @@ def discover(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def collect_inputs(args: argparse.Namespace) -> dict:
+    """Gather invocation inputs from whichever form the caller used.
+
+    `--inputs` takes JSON, which is the right shape for a caller passing a whole
+    object through. It is also miserable to type at a Windows shell, which
+    rewrites the quoting before the process ever sees it and produces a JSON
+    error that says nothing about the real cause. `--input name=value` and
+    `--inputs-file` exist so that is never the only way in.
+    """
+    inputs: dict = {}
+
+    if getattr(args, "inputs_file", None):
+        inputs.update(json.loads(Path(args.inputs_file).read_text(encoding="utf-8")))
+
+    raw = (args.inputs or "").strip()
+    if raw and raw != "{}":
+        try:
+            inputs.update(json.loads(raw))
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"--inputs is not valid JSON ({exc}). Some shells strip the inner "
+                f"quotes; --input name=value avoids the question entirely:\n"
+                f"    --input member_id=100482 --input check_number=1043"
+            ) from exc
+
+    for pair in getattr(args, "input", None) or []:
+        if "=" not in pair:
+            raise ValueError(f"--input expects name=value, got {pair!r}")
+        name, value = pair.split("=", 1)
+        inputs[name.strip()] = value
+
+    return inputs
+
+
 def replay(args: argparse.Namespace) -> int:
     load_dotenv()
 
     capability = store.load(args.artifact)
-    inputs = json.loads(args.inputs) if args.inputs else {}
+    try:
+        inputs = collect_inputs(args)
+    except ValueError as exc:
+        print(f"input rejected: {exc}", file=sys.stderr)
+        return EXIT_USAGE
     base_url = os.environ.get("BASE_URL", args.base_url)
 
     if capability.approval_state != "approved" and not args.allow_draft:
@@ -167,7 +206,8 @@ def replay(args: argparse.Namespace) -> int:
               "`src.cli operator`")
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=args.headless)
+        browser = p.chromium.launch(headless=args.headless,
+                                    slow_mo=args.slow_mo)
         page = browser.new_page()
         try:
             surface = guarded(page, policy)
@@ -309,6 +349,8 @@ def build_parser() -> argparse.ArgumentParser:
     d.add_argument("--evidence-root", default="evidence/discovery")
     d.add_argument("--out", default=None)
     d.add_argument("--policy", default="policy/discovery.yaml")
+    d.add_argument("--slow-mo", type=int, default=0, metavar="MS",
+                   help="pause between browser operations so a person can follow along. Demonstration only; it changes nothing about what runs.")
     d.add_argument("--headless", action="store_true",
                    help="run without a visible browser (default is visible)")
     d.set_defaults(func=discover)
@@ -316,6 +358,10 @@ def build_parser() -> argparse.ArgumentParser:
     r = sub.add_parser("replay", help="replay a capability; makes no model calls")
     r.add_argument("--artifact", required=True)
     r.add_argument("--inputs", default="{}", help="JSON object of input values")
+    r.add_argument("--input", action="append", metavar="NAME=VALUE",
+                   help="one input value; repeatable. Avoids shell quoting.")
+    r.add_argument("--inputs-file", default=None,
+                   help="path to a JSON file of input values")
     r.add_argument("--base-url", default="http://127.0.0.1:5000")
     r.add_argument("--evidence-root", default="evidence/replay")
     r.add_argument("--policy", default=None,
@@ -330,6 +376,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="pause and hand the live session to an operator when the "
                         "run cannot safely continue on its own")
     r.add_argument("--handoff-timeout", type=float, default=900)
+    r.add_argument("--slow-mo", type=int, default=0, metavar="MS",
+                   help="pause between browser operations so a person can follow along. Demonstration only; it changes nothing about what runs.")
     r.set_defaults(func=replay)
 
     o = sub.add_parser("operator", help="take and hand back control of a live run")

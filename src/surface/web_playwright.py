@@ -24,7 +24,8 @@ from . import locators as loc
 from . import snapshot as snap
 from .base import (
     ANY_FRAME, TOP_FRAME, Action, ActionBlocked, ActResult, ConfirmationRequired, Gate,
-    AllowAll, Node, Observation, Resolution, SurfaceError, Target, TargetNotFound,
+    AllowAll, Node, Observation, Resolution, SessionLost, SurfaceError, Target,
+    TargetNotFound,
 )
 
 SETTLE_MS = 5_000
@@ -145,7 +146,16 @@ class WebSurface:
 
     # --------------------------------------------------------------- targeting
 
+    def alive(self) -> None:
+        """Fail clearly when there is no session left to act on."""
+        if self.page.is_closed():
+            raise SessionLost(
+                "the browser session is gone (the window was closed, or the "
+                "browser exited). Nothing was attempted against the page."
+            )
+
     def resolve(self, target: Target) -> Resolution:
+        self.alive()
         if target.scope.frame == ANY_FRAME:
             return self._resolve_across_frames(target)
         return loc.resolve(self.frame(target.scope.frame), target)
@@ -213,6 +223,7 @@ class WebSurface:
         """
         # Two independent refusals, in order. Control first: if a person holds
         # the session, nothing automation wants to do matters yet.
+        self.alive()
         if self.lease is not None:
             self.lease.assert_automation_holds()
 

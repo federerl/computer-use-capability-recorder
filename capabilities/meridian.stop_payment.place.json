@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "id": "meridian.stop_payment.place",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "title": "Place stop payment on a check",
   "description": "Signs in to the Meridian CU back office, looks up a member by member number, opens the specified account type, and submits a stop payment for a given check number and reason. Returns the confirmation details.",
   "approval_state": "approved",
@@ -956,94 +956,9 @@
             "action": "navigate",
             "url": "${BASE_URL}/login",
             "wait": {
-              "until": "settled",
-              "scope": {
-                "frame": "main"
-              },
-              "timeout_ms": 8000
-            },
-            "risk": "safe",
-            "note": ""
-          },
-          {
-            "id": "r3",
-            "action": "fill",
-            "target": {
-              "scope": {
-                "frame": "main"
-              },
-              "primary": {
-                "by": "role_name",
-                "role": "textbox",
-                "name": "Operator ID"
-              },
-              "fallbacks": [],
-              "disambiguation": {
-                "expect_unique": true
-              }
-            },
-            "value": {
-              "from_secret": "operator_user"
-            },
-            "wait": {
-              "until": "settled",
-              "scope": {
-                "frame": "main"
-              },
-              "timeout_ms": 8000
-            },
-            "risk": "safe",
-            "note": ""
-          },
-          {
-            "id": "r4",
-            "action": "fill",
-            "target": {
-              "scope": {
-                "frame": "main"
-              },
-              "primary": {
-                "by": "role_name",
-                "role": "textbox",
-                "name": "Password"
-              },
-              "fallbacks": [],
-              "disambiguation": {
-                "expect_unique": true
-              }
-            },
-            "value": {
-              "from_secret": "operator_password"
-            },
-            "wait": {
-              "until": "settled",
-              "scope": {
-                "frame": "main"
-              },
-              "timeout_ms": 8000
-            },
-            "risk": "safe",
-            "note": ""
-          },
-          {
-            "id": "r5",
-            "action": "click",
-            "target": {
-              "scope": {
-                "frame": "main"
-              },
-              "primary": {
-                "by": "role_name",
-                "role": "button",
-                "name": "Sign On"
-              },
-              "fallbacks": [],
-              "disambiguation": {
-                "expect_unique": true
-              }
-            },
-            "wait": {
-              "until": "settled",
+              "until": "role",
+              "role": "button",
+              "name": "Sign On",
               "scope": {
                 "frame": "main"
               },
@@ -1073,7 +988,8 @@
       "s12: reclassified from safe to irreversible and gated on confirmation. The run could not know the action places a fee-bearing hold; risk is a policy judgement.",
       "masked_account_number: marked as account data for redaction.",
       "MEMBER_NOT_FOUND: the run anticipated this state without reaching it and guessed the wording as 'No members found'. The screen reads 'No records match'. Corrected, and every condition checked against the real state.",
-      "Added three business outcomes and two recoverable conditions for states a successful run never reached."
+      "Added three business outcomes and two recoverable conditions for states a successful run never reached.",
+      "SESSION_EXPIRED: the recovery signed back in itself and then restarted the flow, which signs in again - the same four steps ran twice. The recovery now only leaves the expired screen; restarting covers the rest."
     ]
   },
   "review": []

@@ -273,6 +273,18 @@ class SurfaceError(Exception):
     """Base for every failure originating at the surface boundary."""
 
 
+class SessionLost(SurfaceError):
+    """The browser session is gone - window closed, or the process died.
+
+    Distinct from a control being missing, and worth its own type because the
+    two look identical at the point of failure and mean completely different
+    things. A missing control is a question about the page; a lost session means
+    there is no page, and every diagnostic that follows - which strategies were
+    tried, what the screen showed - is noise pointing somewhere it did not
+    happen.
+    """
+
+
 class TargetNotFound(SurfaceError):
     def __init__(self, target: Target, attempts: list[Attempt]):
         self.target = target
